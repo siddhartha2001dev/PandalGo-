@@ -1,4 +1,5 @@
 import { v2 as cloudinary } from 'cloudinary';
+import crypto from 'crypto';
 import { env } from './env.js';
 
 // Environment values are commonly pasted into Render with an accidental
@@ -17,7 +18,8 @@ if (isCloudinaryConfigured) {
     api_secret: apiSecret,
     secure: true,
   });
-  console.log('[Storage] Cloudinary configured successfully.');
+  const secretFingerprint = crypto.createHash('sha256').update(apiSecret).digest('hex').slice(0, 12);
+  console.log(`[Storage] Cloudinary configured for ${cloudName} (key suffix ****${apiKey.slice(-4)}, secret fingerprint ${secretFingerprint}).`);
 } else {
   console.log('[Storage] Cloudinary credentials not detected. Falling back to local disk storage adapter (/uploads).');
 }

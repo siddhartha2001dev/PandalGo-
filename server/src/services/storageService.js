@@ -37,6 +37,11 @@ export async function processAndStoreFile(file) {
       return uploadResult.secure_url;
     } catch (err) {
       console.error('[StorageService] Cloudinary upload error:', err);
+      if (/invalid signature/i.test(err.message || '')) {
+        throw new Error(
+          'Cloudinary authentication failed. Update CLOUDINARY_API_SECRET in the deployed backend with the current secret from the matching Cloudinary account, then redeploy.'
+        );
+      }
       throw new Error(`Cloud storage upload failed: ${err.message}`);
     }
   }

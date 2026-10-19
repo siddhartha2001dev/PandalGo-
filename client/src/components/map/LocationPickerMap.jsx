@@ -144,8 +144,7 @@ export function LocationPickerMap({
     }
   };
 
-  const handleManualSearch = async (event) => {
-    event.preventDefault();
+  const handleManualSearch = async () => {
     const query = manualQuery.trim();
     if (!query || !canPlaceRemotePin) return;
     setManualSearchLoading(true);
@@ -208,7 +207,16 @@ export function LocationPickerMap({
       )}
 
       {canPlaceRemotePin && (
-        <form onSubmit={handleManualSearch} className="flex flex-col sm:flex-row gap-2">
+        <div
+          role="search"
+          className="flex flex-col sm:flex-row gap-2"
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              handleManualSearch();
+            }
+          }}
+        >
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
             <input
@@ -220,14 +228,15 @@ export function LocationPickerMap({
             />
           </div>
           <button
-            type="submit"
+            type="button"
+            onClick={handleManualSearch}
             disabled={manualSearchLoading || !manualQuery.trim()}
             className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-stone-900 dark:bg-stone-100 px-4 py-2.5 text-sm font-bold text-white dark:text-stone-900 disabled:opacity-50"
           >
             <Search className="w-4 h-4" />
             {manualSearchLoading ? 'Searching...' : 'Find location'}
           </button>
-        </form>
+        </div>
       )}
 
       {permissionNotice && (

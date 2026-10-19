@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Renderer, Program, Mesh, Triangle, Geometry, RenderTarget, Texture } from 'ogl';
 
 import './CrystalizedBall.css';
@@ -758,7 +758,6 @@ const CrystalizedBall = ({
   const containerRef = useRef(null);
   const settingsRef = useRef(null);
   const wakeRef = useRef(null);
-  const [webglUnavailable, setWebglUnavailable] = useState(false);
 
   const base = BALL_PRESETS[preset] || BALL_PRESETS.plasma;
   const pick = (value, key) => (value === undefined || value === null ? base[key] : value);
@@ -804,18 +803,19 @@ const CrystalizedBall = ({
     try {
       renderer = new Renderer({ alpha: true, premultipliedAlpha: true, antialias: false, depth: false });
     } catch {
-      setWebglUnavailable(true);
       return undefined;
     }
     const gl = renderer.gl;
     if (!renderer.isWebgl2) {
       gl.getExtension('WEBGL_lose_context')?.loseContext();
-      setWebglUnavailable(true);
       return undefined;
     }
-    setWebglUnavailable(false);
     const canvas = gl.canvas;
     canvas.style.display = 'block';
+    canvas.style.position = 'absolute';
+    canvas.style.inset = '0';
+    canvas.style.zIndex = '1';
+    canvas.style.pointerEvents = 'none';
     canvas.style.width = '100%';
     canvas.style.height = '100%';
     canvas.setAttribute('aria-hidden', 'true');
@@ -1386,11 +1386,9 @@ const CrystalizedBall = ({
 
   return (
     <div ref={containerRef} className={`crystalized-ball ${className}`.trim()} style={style}>
-      {webglUnavailable && (
-        <div className="crystalized-ball-fallback" aria-hidden="true">
-          <div className="crystalized-ball-fallback-core" />
-        </div>
-      )}
+      <div className="crystalized-ball-fallback" aria-hidden="true">
+        <div className="crystalized-ball-fallback-core" />
+      </div>
     </div>
   );
 };

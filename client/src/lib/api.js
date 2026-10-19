@@ -4,6 +4,8 @@ import axios from 'axios';
 // In Vercel/production, the Vercel rewrite proxies /api to Render. Set VITE_API_URL
 // only when deploying without that rewrite or when using a custom API domain.
 const configuredApiUrl = import.meta.env.VITE_API_URL?.trim();
+const DEFAULT_API_URL = 'https://pandalgo-y5tm.onrender.com';
+const isLegacyApiUrl = /https?:\/\/pandalgo\.onrender\.com(?:\/|$)/i.test(configuredApiUrl || '');
 function resolveApiBaseUrl(value) {
   const normalized = (value || '').replace(/\/+$/, '');
   if (!normalized) return '/api/v1';
@@ -12,7 +14,11 @@ function resolveApiBaseUrl(value) {
   return `${normalized}/api/v1`;
 }
 
-const API_BASE_URL = resolveApiBaseUrl(configuredApiUrl || (import.meta.env.DEV ? '' : 'https://pandalgo.onrender.com'));
+const API_BASE_URL = resolveApiBaseUrl(
+  isLegacyApiUrl
+    ? DEFAULT_API_URL
+    : configuredApiUrl || (import.meta.env.DEV ? '' : DEFAULT_API_URL)
+);
 
 export const api = axios.create({
   baseURL: API_BASE_URL,

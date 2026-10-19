@@ -18,12 +18,12 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'https://pandalgo.onrender.com',
+        target: 'https://pandalgo-y5tm.onrender.com',
         changeOrigin: true,
         secure: false,
       },
       '/uploads': {
-        target: 'https://pandalgo.onrender.com',
+        target: 'https://pandalgo-y5tm.onrender.com',
         changeOrigin: true,
         secure: false,
       },

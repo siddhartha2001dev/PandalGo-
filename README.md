@@ -163,7 +163,7 @@ CROWD_REPORT_COOLDOWN_MINUTES=3
 TOMTOM_API_KEY=your_tomtom_api_key_here
 ```
 
-The included Vercel rewrite proxies `/api` to the Render service, so `VITE_API_URL` can remain unset. The current deployed frontend origin is `https://pandal-csa0noeky-sidcode1.vercel.app`; configure that exact value as Render's `CLIENT_URL`. If you deploy without the rewrite, set `VITE_API_URL` to the exact public Render API URL. In MongoDB Atlas, allow the Render service network access and seed the connected database with `npm --prefix server run seed` once.
+The included Vercel rewrite proxies `/api` to `https://pandalgo-y5tm.onrender.com`, so `VITE_API_URL` can remain unset. The current deployed frontend origin is `https://pandal-csa0noeky-sidcode1.vercel.app`; configure that exact value as Render's `CLIENT_URL`. If you deploy without the rewrite, set `VITE_API_URL` to `https://pandalgo-y5tm.onrender.com`. In MongoDB Atlas, allow the Render service network access and seed the connected database with `npm --prefix server run seed` once.
 
 ### 4. Seed 45+ Verified Kolkata Pandals
 

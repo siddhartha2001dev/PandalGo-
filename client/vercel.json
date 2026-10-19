@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://pandalgo.onrender.com/api/:path*" },
+    { "source": "/api/:path*", "destination": "https://pandalgo-y5tm.onrender.com/api/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

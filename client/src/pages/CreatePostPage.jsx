@@ -27,7 +27,7 @@ const CATEGORIES = [
 ];
 
 export function CreatePostPage() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   const [title, setTitle] = useState('');
@@ -54,6 +54,15 @@ export function CreatePostPage() {
   });
 
   const approvedPujas = pujasData?.pujas || [];
+
+  if (authLoading) {
+    return (
+      <div className="min-h-[45vh] flex flex-col items-center justify-center gap-3 px-4">
+        <div className="w-9 h-9 border-3 border-stone-200 dark:border-stone-800 border-t-festival-600 rounded-full animate-spin" />
+        <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">Restoring your session...</p>
+      </div>
+    );
+  }
 
   if (!user) {
     return (

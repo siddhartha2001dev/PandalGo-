@@ -1,17 +1,20 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { env } from './env.js';
 
-export const isCloudinaryConfigured = Boolean(
-  env.CLOUDINARY_CLOUD_NAME &&
-  env.CLOUDINARY_API_KEY &&
-  env.CLOUDINARY_API_SECRET
-);
+// Environment values are commonly pasted into Render with an accidental
+// leading/trailing space. Cloudinary signs the exact secret, so normalize the
+// values once at startup before configuring the SDK.
+const cloudName = env.CLOUDINARY_CLOUD_NAME.trim();
+const apiKey = env.CLOUDINARY_API_KEY.trim();
+const apiSecret = env.CLOUDINARY_API_SECRET.trim();
+
+export const isCloudinaryConfigured = Boolean(cloudName && apiKey && apiSecret);
 
 if (isCloudinaryConfigured) {
   cloudinary.config({
-    cloud_name: env.CLOUDINARY_CLOUD_NAME,
-    api_key: env.CLOUDINARY_API_KEY,
-    api_secret: env.CLOUDINARY_API_SECRET,
+    cloud_name: cloudName,
+    api_key: apiKey,
+    api_secret: apiSecret,
     secure: true,
   });
   console.log('[Storage] Cloudinary configured successfully.');

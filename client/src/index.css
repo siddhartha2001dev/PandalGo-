@@ -262,6 +262,113 @@ html.dark .leaflet-tile-pane {
 }
 
 /* Festive AI Computer Vision Scanner Animations */
+.ai-crowd-sphere {
+  position: relative;
+  width: min(70%, 270px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  isolation: isolate;
+  animation: ai-crowd-sphere-float 2.8s ease-in-out infinite;
+}
+
+.ai-crowd-sphere::before {
+  content: '';
+  position: absolute;
+  inset: 1.5%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 238, 255, 0.92) 0 1%, transparent 1.8%),
+    radial-gradient(circle at 68% 24%, rgba(255, 178, 245, 0.85) 0 1%, transparent 1.8%),
+    radial-gradient(circle at 23% 66%, rgba(242, 91, 208, 0.95) 0 1.4%, transparent 2%),
+    radial-gradient(circle at 75% 68%, rgba(255, 208, 249, 0.88) 0 1.2%, transparent 2%),
+    radial-gradient(circle at 50% 55%, rgba(188, 58, 177, 0.28), rgba(19, 10, 24, 0.96) 67%);
+  box-shadow:
+    0 0 12px rgba(255, 171, 244, 0.95),
+    0 0 34px rgba(242, 91, 208, 0.75),
+    0 0 72px rgba(125, 62, 198, 0.46),
+    inset 0 0 28px rgba(255, 211, 250, 0.7);
+  z-index: 1;
+}
+
+.ai-crowd-sphere::after {
+  content: '';
+  position: absolute;
+  inset: 4%;
+  border: 3px solid rgba(255, 194, 248, 0.95);
+  border-radius: 48% 52% 47% 53%;
+  filter: drop-shadow(0 0 5px rgba(242, 91, 208, 0.95));
+  transform: rotate(-18deg);
+  animation: ai-crowd-sphere-rim 2.2s linear infinite;
+  z-index: 3;
+}
+
+.ai-crowd-sphere-core {
+  position: absolute;
+  inset: 15%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 226, 253, 0.08), transparent 66%);
+  overflow: hidden;
+  z-index: 2;
+}
+
+.ai-crowd-sphere-particles {
+  position: absolute;
+  inset: 5%;
+  border-radius: 50%;
+  opacity: 0.92;
+  background-image: radial-gradient(circle, rgba(255, 204, 249, 0.95) 0 1.5px, transparent 2px);
+  background-size: 13px 13px;
+  mask-image: radial-gradient(ellipse at center, black 0 55%, transparent 80%);
+  animation: ai-crowd-sphere-particles 3.2s linear infinite;
+}
+
+.ai-crowd-sphere-orbit {
+  position: absolute;
+  inset: -3%;
+  border: 2px solid rgba(218, 111, 230, 0.58);
+  border-radius: 50%;
+  transform: rotate(58deg) scaleY(0.38);
+  filter: drop-shadow(0 0 4px rgba(242, 91, 208, 0.85));
+  z-index: 4;
+}
+
+.ai-crowd-sphere-orbit-two {
+  transform: rotate(-58deg) scaleY(0.38);
+  border-color: rgba(255, 191, 246, 0.52);
+  animation: ai-crowd-sphere-orbit 3s linear infinite reverse;
+}
+
+.ai-crowd-sphere-orbit-one {
+  animation: ai-crowd-sphere-orbit 2.4s linear infinite;
+}
+
+@keyframes ai-crowd-sphere-float {
+  0%, 100% { transform: translateY(2px) scale(0.98); }
+  50% { transform: translateY(-4px) scale(1.02); }
+}
+
+@keyframes ai-crowd-sphere-rim {
+  to { transform: rotate(342deg); }
+}
+
+@keyframes ai-crowd-sphere-orbit {
+  to { transform: rotate(418deg) scaleY(0.38); }
+}
+
+@keyframes ai-crowd-sphere-particles {
+  to { transform: rotate(360deg) scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-crowd-sphere,
+  .ai-crowd-sphere::after,
+  .ai-crowd-sphere-particles,
+  .ai-crowd-sphere-orbit-one,
+  .ai-crowd-sphere-orbit-two {
+    animation: none;
+  }
+}
+
 @keyframes festive-scan {
   0% {
     top: 2%;

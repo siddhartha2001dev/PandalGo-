@@ -23,7 +23,6 @@ import {
   X,
 } from 'lucide-react';
 import { CrowdBadge } from '../common/CrowdBadge.jsx';
-import CrystalizedBall from './CrystalizedBall.jsx';
 
 /**
  * Three-Stage Progress Indicator
@@ -622,22 +621,19 @@ export function AutoCrowdDetectModal({ isOpen, onClose, puja, onDetectionSuccess
               )}
             </div>
 
-            {/* CrystalizedBall replaces the previous crowd reference-image block. */}
+            {/* Guaranteed-rendering sphere replaces the previous crowd reference-image block. */}
             <div
               className="relative flex h-56 w-full items-center justify-center overflow-hidden rounded-xl border border-[#B58B45]/40 bg-[#100B12] shadow-[inset_0_0_42px_rgba(212,175,55,0.08)] sm:h-72"
               role="img"
               aria-label="Animated AI crowd intelligence scanner"
             >
-              <CrystalizedBall
-                preset="plasma"
-                color="#F25BD0"
-                size={0.72}
-                crackle={0.85}
-                fill={0.5}
-                particleCount={12000}
-                interactive
-                hoverStrength={0.7}
-              />
+              <div className="ai-crowd-sphere" aria-hidden="true">
+                <div className="ai-crowd-sphere-orbit ai-crowd-sphere-orbit-one" />
+                <div className="ai-crowd-sphere-orbit ai-crowd-sphere-orbit-two" />
+                <div className="ai-crowd-sphere-core">
+                  <div className="ai-crowd-sphere-particles" />
+                </div>
+              </div>
               <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-fuchsia-300/30 bg-black/45 px-3 py-1 text-[10px] font-semibold tracking-[0.18em] text-fuchsia-100/80">
                 AI CROWD SCAN ACTIVE
               </div>

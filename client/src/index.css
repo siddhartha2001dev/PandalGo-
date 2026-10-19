@@ -1,0 +1,516 @@
+@import "leaflet/dist/leaflet.css";
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+    --bg-canvas: #FBF7EF;
+    --surface-card: #FDFBF7;
+    --surface-elevated: #F4EBDD;
+    --text-primary: #282520;
+    --text-muted: #686358;
+    --border-subtle: #E8DEC8;
+    --brand-primary: #C74732;
+    --brand-maroon: #702C35;
+    --brand-gold: #B58B45;
+    --brand-terracotta: #B86B4B;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html.dark {
+    color-scheme: dark;
+    --bg-canvas: #141210;
+    --surface-card: #1E1A17;
+    --surface-elevated: #27221E;
+    --text-primary: #F9F6F0;
+    --text-muted: #B8AF9F;
+    --border-subtle: #3A322B;
+    --brand-primary: #E05A44;
+    --brand-maroon: #8C3B46;
+    --brand-gold: #D4AF37;
+    --brand-terracotta: #C87A5B;
+  }
+
+  body {
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    overflow-x: hidden;
+    min-height: 100vh;
+    min-height: 100dvh;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Subtle Bengali Alpana & Terracotta lattice background texture at 2.5% opacity */
+    background-image: 
+      radial-gradient(ellipse 90% 40% at 50% -10%, rgba(181, 139, 69, 0.08), transparent 70%),
+      url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0L60 30L30 60L0 30L30 0ZM30 8L8 30L30 52L52 30L30 8Z' fill='%23B86B4B' fill-opacity='0.025' fill-rule='evenodd'/%3E%3Ccircle cx='30' cy='30' r='3' fill='%23B58B45' fill-opacity='0.03'/%3E%3C/svg%3E");
+    background-repeat: repeat, repeat;
+  }
+
+  html.dark body {
+    background-color: #141210 !important;
+    color: #F9F6F0 !important;
+    background-image: 
+      radial-gradient(ellipse 90% 40% at 50% -10%, rgba(212, 175, 55, 0.05), transparent 70%),
+      url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0L60 30L30 60L0 30L30 0ZM30 8L8 30L30 52L52 30L30 8Z' fill='%23D4AF37' fill-opacity='0.02' fill-rule='evenodd'/%3E%3Ccircle cx='30' cy='30' r='3' fill='%23C87A5B' fill-opacity='0.02'/%3E%3C/svg%3E");
+  }
+
+  html.dark input,
+  html.dark select,
+  html.dark textarea {
+    color-scheme: dark;
+  }
+
+  /* Clean subtle scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #d6d3d1;
+    border-radius: 9999px;
+  }
+  .dark ::-webkit-scrollbar-thumb {
+    background: #44403c;
+  }
+
+  /* Text selection */
+  ::selection {
+    background: rgba(185, 28, 28, 0.15);
+    color: #991b1b;
+  }
+  .dark ::selection {
+    background: rgba(217, 119, 6, 0.25);
+    color: #fef3c7;
+  }
+}
+
+@layer components {
+  /* Mobile Dev Bot is a viewport sheet; only its message list should scroll. */
+  .devbot-mobile-shell {
+    overscroll-behavior: none;
+    touch-action: none;
+  }
+
+  .devbot-mobile-shell .devbot-messages {
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  @media (max-width: 639px) {
+    .devbot-mobile-shell {
+      top: var(--devbot-viewport-top, 0px);
+      bottom: auto;
+      height: var(--devbot-viewport-height, 100dvh);
+      max-height: var(--devbot-viewport-height, 100dvh);
+      min-height: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+    }
+
+    .devbot-mobile-shell > div {
+      min-height: 0;
+      height: 100%;
+      border-radius: 0;
+    }
+  }
+
+  /* Mobile bottom nav safe area padding */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Coordinated mobile floating actions positioning contract */
+  .mobile-floating-post-update {
+    position: fixed;
+    left: 1rem;
+    bottom: calc(4rem + env(safe-area-inset-bottom, 0px) + 12px);
+    z-index: 40;
+  }
+
+  @media (min-width: 640px) {
+    .mobile-floating-post-update {
+      left: 1.5rem;
+      bottom: 1.5rem;
+    }
+  }
+
+  .mobile-floating-devbot {
+    position: fixed;
+    right: 1rem;
+    bottom: calc(4rem + env(safe-area-inset-bottom, 0px) + 12px);
+    z-index: 45;
+  }
+
+  @media (min-width: 640px) {
+    .mobile-floating-devbot {
+      right: 1.5rem;
+      bottom: 1.5rem;
+    }
+  }
+}
+
+/* Leaflet Map Optimizations for Mobile and Touch */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  font-family: inherit;
+  background: #F4EBDD;
+}
+
+.dark .leaflet-container {
+  background: #141210 !important;
+}
+
+.leaflet-container img {
+  max-width: none !important;
+  max-height: none !important;
+}
+
+.leaflet-tile {
+  max-width: none !important;
+  max-height: none !important;
+  user-select: none;
+}
+
+/* Popup styling */
+.leaflet-popup-content-wrapper {
+  background: #FDFBF7 !important;
+  color: #282520 !important;
+  border: 1px solid #E8DEC8 !important;
+  border-radius: 16px !important;
+  padding: 0 !important;
+  box-shadow: 0 10px 25px -5px rgba(40, 37, 32, 0.15), 0 8px 10px -6px rgba(40, 37, 32, 0.1) !important;
+  overflow: hidden !important;
+}
+
+.leaflet-popup-tip {
+  background: #FDFBF7 !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  line-height: inherit !important;
+  width: auto !important;
+}
+
+.dark .leaflet-popup-content-wrapper {
+  background: #1E1A17 !important;
+  color: #F9F6F0 !important;
+  border: 1px solid #3A322B !important;
+  box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.6) !important;
+}
+
+.dark .leaflet-popup-tip {
+  background: #1E1A17 !important;
+}
+
+/* Light & Dark map tile tone */
+html.dark .leaflet-tile-pane {
+  filter: brightness(0.7) invert(1) contrast(1.6) hue-rotate(180deg);
+}
+
+/* Touch friendly UI utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Restrained Scanning Line Animation with Reduced Motion Support */
+@keyframes scan-line {
+  0% {
+    top: 2%;
+    opacity: 0.2;
+  }
+  50% {
+    top: 94%;
+    opacity: 0.95;
+  }
+  100% {
+    top: 2%;
+    opacity: 0.2;
+  }
+}
+
+.animate-scan-line {
+  animation: scan-line 2.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-scan-line {
+    animation: none !important;
+  }
+}
+
+/* Festive AI Computer Vision Scanner Animations */
+@keyframes festive-scan {
+  0% {
+    top: 2%;
+    opacity: 0.3;
+  }
+  50% {
+    top: 94%;
+    opacity: 1;
+  }
+  100% {
+    top: 2%;
+    opacity: 0.3;
+  }
+}
+
+@keyframes festive-spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes festive-spin-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes festive-pulse-glow {
+  0%, 100% {
+    transform: scale(0.96);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.9;
+  }
+}
+
+@keyframes festive-sparkle-float {
+  0% {
+    transform: translateY(0px) scale(0.85);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-10px) scale(1.15);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateY(0px) scale(0.85);
+    opacity: 0.3;
+  }
+}
+
+/* Indian-inspired 3D AI crowd scanner orb */
+.ai-orb-scene {
+  position: relative;
+  width: 132px;
+  height: 132px;
+  margin: 0 auto 0.25rem;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+}
+
+.ai-orb {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: 9999px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 30% 24%, rgba(255, 247, 205, 0.98) 0 4%, rgba(244, 190, 82, 0.95) 11%, transparent 27%),
+    radial-gradient(circle at 68% 72%, rgba(112, 24, 36, 0.9), transparent 58%),
+    linear-gradient(135deg, #f3c969 0%, #c74732 43%, #702c35 72%, #24100c 100%);
+  border: 1px solid rgba(255, 224, 137, 0.9);
+  box-shadow: inset -13px -12px 22px rgba(25, 5, 3, 0.58), inset 8px 7px 16px rgba(255, 244, 184, 0.34), 0 0 28px rgba(212, 175, 55, 0.5);
+  transform: translateZ(0);
+  animation: ai-orb-float 3.2s ease-in-out infinite;
+}
+
+.ai-orb-scene-active .ai-orb {
+  animation: ai-orb-float 2s ease-in-out infinite, ai-orb-pulse 1.8s ease-in-out infinite;
+}
+
+.ai-orb::after {
+  content: '';
+  position: absolute;
+  inset: 8px 13px 42px 12px;
+  border-radius: 9999px;
+  background: rgba(255, 250, 218, 0.38);
+  filter: blur(5px);
+  transform: rotate(-22deg);
+}
+
+.ai-orb-grid {
+  position: absolute;
+  inset: -20%;
+  opacity: 0.38;
+  background-image: linear-gradient(rgba(255, 236, 157, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 236, 157, 0.5) 1px, transparent 1px);
+  background-size: 12px 12px;
+  transform: rotate(24deg) perspective(80px) rotateX(45deg);
+  mask-image: radial-gradient(circle, black 20%, transparent 70%);
+  animation: ai-orb-grid-drift 5s linear infinite;
+}
+
+.ai-orb-mandala {
+  position: relative;
+  z-index: 2;
+  width: 50px;
+  height: 50px;
+  fill: none;
+  stroke: rgba(255, 244, 185, 0.9);
+  stroke-width: 1.1;
+  filter: drop-shadow(0 0 4px rgba(255, 224, 137, 0.8));
+  animation: ai-orb-mandala-spin 14s linear infinite;
+}
+
+.ai-orb-mandala .ai-orb-core {
+  fill: #fff1ae;
+  stroke: #fff8d9;
+  stroke-width: 1;
+}
+
+.ai-orb-label {
+  position: absolute;
+  z-index: 3;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: #5f1e22;
+  transform: translateX(1px);
+}
+
+.ai-orb-caption {
+  position: absolute;
+  bottom: -1px;
+  z-index: 5;
+  padding: 2px 8px;
+  border: 1px solid rgba(212, 175, 55, 0.42);
+  border-radius: 9999px;
+  background: rgba(28, 15, 8, 0.82);
+  color: #f7d98b;
+  font-family: Georgia, serif;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+
+.ai-orb-halo,
+.ai-orb-orbit {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+}
+
+.ai-orb-halo-one {
+  width: 112px;
+  height: 112px;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  box-shadow: 0 0 22px rgba(199, 71, 50, 0.18);
+}
+
+.ai-orb-halo-two {
+  width: 94px;
+  height: 94px;
+  border: 1px dashed rgba(247, 217, 139, 0.58);
+  animation: ai-orb-mandala-spin 18s linear infinite reverse;
+}
+
+.ai-orb-orbit-one {
+  width: 124px;
+  height: 43px;
+  border: 1px solid rgba(199, 71, 50, 0.68);
+  transform: rotate(32deg);
+  animation: ai-orb-orbit-spin 8s linear infinite;
+}
+
+.ai-orb-orbit-two {
+  width: 124px;
+  height: 43px;
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  transform: rotate(-32deg);
+  animation: ai-orb-orbit-spin 8s linear infinite reverse;
+}
+
+@keyframes ai-orb-float {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-5px) rotate(2deg); }
+}
+
+@keyframes ai-orb-pulse {
+  0%, 100% { box-shadow: inset -13px -12px 22px rgba(25, 5, 3, 0.58), inset 8px 7px 16px rgba(255, 244, 184, 0.34), 0 0 22px rgba(212, 175, 55, 0.4); }
+  50% { box-shadow: inset -13px -12px 22px rgba(25, 5, 3, 0.58), inset 8px 7px 16px rgba(255, 244, 184, 0.34), 0 0 42px rgba(212, 175, 55, 0.82); }
+}
+
+@keyframes ai-orb-grid-drift {
+  from { transform: rotate(24deg) perspective(80px) rotateX(45deg) translate3d(0, 0, 0); }
+  to { transform: rotate(24deg) perspective(80px) rotateX(45deg) translate3d(12px, 8px, 0); }
+}
+
+@keyframes ai-orb-mandala-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ai-orb-orbit-spin {
+  from { transform: rotate(32deg) rotate(0deg); }
+  to { transform: rotate(32deg) rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-orb,
+  .ai-orb-scene-active .ai-orb,
+  .ai-orb-grid,
+  .ai-orb-mandala,
+  .ai-orb-halo-two,
+  .ai-orb-orbit-one,
+  .ai-orb-orbit-two {
+    animation: none !important;
+  }
+}
+
+.animate-festive-scan {
+  animation: festive-scan 3s ease-in-out infinite;
+}
+
+.animate-festive-spin {
+  animation: festive-spin-slow 22s linear infinite;
+}
+
+.animate-festive-spin-reverse {
+  animation: festive-spin-reverse 15s linear infinite;
+}
+
+.animate-festive-pulse {
+  animation: festive-pulse-glow 3.2s ease-in-out infinite;
+}
+
+.animate-festive-sparkle-1 {
+  animation: festive-sparkle-float 3.5s ease-in-out infinite;
+}
+
+.animate-festive-sparkle-2 {
+  animation: festive-sparkle-float 4.2s ease-in-out infinite 0.8s;
+}
+
+.animate-festive-sparkle-3 {
+  animation: festive-sparkle-float 3.8s ease-in-out infinite 1.5s;
+}

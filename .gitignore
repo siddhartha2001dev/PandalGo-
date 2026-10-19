@@ -1,0 +1,60 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Production Builds
+dist/
+dist-ssr/
+build/
+*.local
+
+# Environment Variables & Credentials
+.env
+.env.*
+!.env.example
+server/.env
+server/.env.*
+!server/.env.example
+client/.env
+client/.env.*
+!client/.env.example
+
+# Local Uploads & Static Storage
+uploads/
+server/uploads/
+server/uploads/*
+!server/uploads/.gitkeep
+
+# Logs & Diagnostics
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data & Embedded Database Cache
+.mongodb/
+.mongodb-memory-server/
+
+# Editor & OS Specific Files
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Testing & Coverage
+coverage/
+.nyc_output/
+
+# Temporary Files
+tmp/
+temp/

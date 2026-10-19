@@ -1,0 +1,24 @@
+{
+  "name": "pujomap-monorepo",
+  "version": "1.0.0",
+  "description": "PujoMap — Durga Puja discovery and community-sharing platform",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "build": "npm --prefix server install",
+    "build:server": "npm --prefix server install",
+    "build:client": "npm --prefix client install && npm --prefix client run build",
+    "build:all": "npm --prefix server install && npm --prefix client install && npm --prefix client run build",
+    "start": "npm --prefix server start",
+    "start:server": "npm --prefix server start",
+    "seed": "npm --prefix server run seed",
+    "create-admin": "npm --prefix server run create-admin",
+    "clean-dummy": "npm --prefix server run clean-dummy",
+    "test:server": "npm --prefix server test"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.5"
+  }
+}

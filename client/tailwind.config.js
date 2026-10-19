@@ -1,0 +1,120 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  darkMode: 'class',
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        festival: {
+          50:  '#fff5f5',
+          100: '#ffe3e3',
+          200: '#ffc9c9',
+          300: '#ffa8a8',
+          400: '#fa5252',
+          500: '#dc2626',
+          600: '#b91c1c',
+          700: '#991b1b',
+          800: '#7f1d1d',
+          900: '#450a0a',
+          950: '#2a0505',
+        },
+        marigold: {
+          50:  '#fffbeb',
+          100: '#fef3c7',
+          200: '#fde68a',
+          300: '#fcd34d',
+          400: '#fbbf24',
+          500: '#f59e0b',
+          600: '#d97706',
+          700: '#b45309',
+        },
+        sindoor: {
+          50:  '#fff1f1',
+          100: '#ffe0e0',
+          200: '#ffc7c7',
+          300: '#ffa0a0',
+          400: '#ff6b6b',
+          500: '#e53e3e',
+          600: '#c53030',
+          700: '#9b2c2c',
+        },
+        ivory: {
+          50:  '#FFFDF7',
+          100: '#FFF9F0',
+          200: '#FFF3E0',
+          300: '#FFECCC',
+        },
+        bengal: {
+          ivory: '#FBF7EF',
+          parchment: '#F4EBDD',
+          'parchment-light': '#FDFBF7',
+          cream: '#FFF8EE',
+          border: '#E8DEC8',
+          'border-dark': '#3A322B',
+          vermilion: '#C74732',
+          'vermilion-dark': '#A83522',
+          maroon: '#702C35',
+          gold: '#B58B45',
+          'gold-light': '#D4AF37',
+          terracotta: '#B86B4B',
+          ink: '#282520',
+          muted: '#686358',
+          'dark-canvas': '#141210',
+          'dark-card': '#1E1A17',
+          'dark-elevated': '#27221E',
+        },
+        crowd: {
+          low: '#16a34a',
+          moderate: '#d97706',
+          high: '#dc2626',
+          mixed: '#6366f1',
+          unknown: '#78716c',
+        }
+      },
+      fontFamily: {
+        sans: ['"Plus Jakarta Sans"', 'Poppins', 'system-ui', 'sans-serif'],
+        serif: ['"Playfair Display"', 'Georgia', 'serif'],
+        bengali: ['"Noto Sans Bengali"', 'sans-serif'],
+      },
+      borderRadius: {
+        '4xl': '2rem',
+      },
+      boxShadow: {
+        'festive': '0 8px 32px -4px rgba(185, 28, 28, 0.15), 0 4px 16px -2px rgba(245, 158, 11, 0.1)',
+        'festive-lg': '0 16px 48px -8px rgba(185, 28, 28, 0.2), 0 8px 24px -4px rgba(245, 158, 11, 0.15)',
+        'glow-amber': '0 0 20px rgba(245, 158, 11, 0.3)',
+        'glow-red': '0 0 20px rgba(185, 28, 28, 0.3)',
+        'card': '0 2px 12px -2px rgba(0,0,0,0.08), 0 1px 4px -1px rgba(0,0,0,0.04)',
+        'card-hover': '0 8px 30px -4px rgba(0,0,0,0.12), 0 4px 12px -2px rgba(0,0,0,0.06)',
+      },
+      animation: {
+        'diya-glow': 'diyaGlow 2s ease-in-out infinite alternate',
+        'float': 'float 3s ease-in-out infinite',
+        'shimmer': 'shimmer 2s linear infinite',
+      },
+      keyframes: {
+        diyaGlow: {
+          '0%': { filter: 'drop-shadow(0 0 6px rgba(245, 158, 11, 0.4))' },
+          '100%': { filter: 'drop-shadow(0 0 18px rgba(245, 158, 11, 0.8))' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-6px)' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+      },
+      backgroundImage: {
+        'festive-gradient': 'linear-gradient(135deg, #b91c1c 0%, #991b1b 30%, #7f1d1d 60%, #450a0a 100%)',
+        'marigold-gradient': 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)',
+        'shimmer-gradient': 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)',
+      },
+    },
+  },
+  plugins: [],
+}

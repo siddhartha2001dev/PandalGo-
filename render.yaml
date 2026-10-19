@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: pandalgo-backend
+    env: node
+    plan: free
+    region: oregon
+    buildCommand: npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: CLIENT_URL
+        value: https://pandal-csa0noeky-sidcode1.vercel.app
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ACCESS_TOKEN_EXPIRES_IN
+        value: 15m
+      - key: REFRESH_TOKEN_EXPIRES_IN
+        value: 30d
+      - key: REFRESH_TOKEN_DAYS
+        value: "30"
+      - key: CROWD_RADIUS_METERS
+        value: "100"
+      - key: CROWD_FRESHNESS_MINUTES
+        value: "15"
+      - key: CROWD_REPORT_COOLDOWN_MINUTES
+        value: "3"
+      - key: DEV_BOT_ENABLED
+        value: "true"
+      - key: AI_PROVIDER
+        value: groq
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-120b

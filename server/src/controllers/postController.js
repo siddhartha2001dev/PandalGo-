@@ -61,7 +61,10 @@ export async function createPost(req, res, next) {
       });
 
       if (!linkedPuja) {
-        const isVerifiedLocation = req.user.role === 'admin' || locationSource === 'gps';
+        // A community post without an existing pandal is itself the location
+        // record. Coordinates are required by the client/server flow, so it is
+        // immediately usable by search, map, crowd reports, and AI scanning.
+        const isVerifiedLocation = true;
         linkedPuja = await Puja.create({
           name: pandalName,
           slug: await generateCommunityPujaSlug(pandalName),
@@ -101,7 +104,7 @@ export async function createPost(req, res, next) {
 
     const populated = await Post.findById(post._id)
       .populate('authorId', 'name avatar')
-      .populate('associatedPujaId', 'name slug locality status');
+      .populate('associatedPujaId', 'name slug locality status location');
 
     clearPublicCache('pujas:');
     clearPublicCache('puja-suggestions:');

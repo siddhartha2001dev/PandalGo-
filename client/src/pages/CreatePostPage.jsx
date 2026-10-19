@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Camera,
   X,
@@ -30,6 +30,7 @@ const MAX_IMAGE_SIZE_BYTES = 25 * 1024 * 1024;
 export function CreatePostPage() {
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -171,6 +172,11 @@ export function CreatePostPage() {
 
       const res = await api.post('/posts', payload);
       if (!res.data?.success) throw new Error(res.data?.message || 'The post could not be published.');
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['pujas'] }),
+        queryClient.invalidateQueries({ queryKey: ['search-suggestions'] }),
+        queryClient.invalidateQueries({ queryKey: ['posts-feed'] }),
+      ]);
       navigate('/posts', { replace: true });
     } catch (err) {
       setErrorMessage(err.message || 'Failed to publish post.');

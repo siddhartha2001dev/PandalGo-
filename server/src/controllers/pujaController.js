@@ -3,7 +3,7 @@ import { Post } from '../models/Post.js';
 import { getCrowdEstimateForPuja, calculateDistanceMeters } from '../services/crowdService.js';
 import { findPossibleDuplicates } from '../services/duplicateDetector.js';
 import { resolveLocationCoordinates } from '../services/geocodingService.js';
-import { clearPublicCache, getPublicCache, setPublicCache } from '../services/publicCache.js';
+import { clearPublicCache, getPublicCacheAsync, setPublicCache } from '../services/publicCache.js';
 import { findPujaImage, hasGenericPujaImage } from '../services/pujaImageSearchService.js';
 
 export function slugify(text) {
@@ -33,7 +33,7 @@ export async function getPujas(req, res, next) {
   try {
     const { q, locality, category, lat, lng, radius } = req.query;
     const cacheKey = `pujas:${JSON.stringify({ q: q || '', locality: locality || '', category: category || '', lat: lat || '', lng: lng || '', radius: radius || '' })}`;
-    const cached = getPublicCache(cacheKey);
+    const cached = await getPublicCacheAsync(cacheKey);
     if (cached) return res.json(cached);
 
     const filter = { status: 'approved' };
@@ -103,15 +103,20 @@ export async function getPujas(req, res, next) {
       return plain;
     });
 
-    // Replace generic seed images with name-specific search results. Limit the
-    // work per request so discovery remains responsive for large result sets.
-    const imageRefreshTargets = results.filter((puja) => hasGenericPujaImage(puja.images || [])).slice(0, 12);
-    await Promise.all(imageRefreshTargets.map(async (puja) => {
-      const searchedImage = await findPujaImage(puja);
-      if (!searchedImage?.imageUrl) return;
-      puja.images = [searchedImage.imageUrl];
-      await Puja.updateOne({ _id: puja._id }, { $set: { images: puja.images } });
-    }));
+    // Replace every generic seed image with a name-specific search result.
+    // Process in small batches so a full directory refresh does not flood the
+    // search provider or MongoDB with dozens of concurrent writes.
+    const imageRefreshTargets = results.filter((puja) =>
+      (puja.images || []).some((image) => hasGenericPujaImage([image]))
+    );
+    for (let index = 0; index < imageRefreshTargets.length; index += 6) {
+      const batch = imageRefreshTargets.slice(index, index + 6);
+      await Promise.all(batch.map(async (puja) => {
+        const searchedImage = await findPujaImage(puja);
+        puja.images = searchedImage?.imageUrl ? [searchedImage.imageUrl] : [];
+        await Puja.updateOne({ _id: puja._id }, { $set: { images: puja.images } });
+      }));
+    }
 
     const payload = {
       success: true,
@@ -320,7 +325,7 @@ export async function getSearchSuggestions(req, res, next) {
 
     const queryStr = q.trim();
     const cacheKey = `puja-suggestions:${queryStr.toLowerCase()}`;
-    const cached = getPublicCache(cacheKey);
+    const cached = await getPublicCacheAsync(cacheKey);
     if (cached) return res.json(cached);
     const regex = new RegExp(queryStr, 'i');
 

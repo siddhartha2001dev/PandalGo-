@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { MapPin, Navigation, ExternalLink, ChevronRight, Map as MapIcon, Route } from 'lucide-react';
 import { CrowdBadge } from '../common/CrowdBadge.jsx';
 import { buildDirectionsUrl, buildMapLocationUrl, getDirectionsLabel } from '../../lib/directions.js';
+import { getContextualPujaImage, getPujaInitials } from '../../lib/pujaImages.js';
 
 export function DevBotCard(props) {
   const puja = props.puja || props.pandal;
@@ -44,22 +45,24 @@ export function DevBotCard(props) {
     <div className="bg-[#FDFBF7] dark:bg-[#1E1A17] rounded-xl border border-[#E8DEC8] dark:border-[#3A322B] overflow-hidden shadow-sm hover:shadow-md transition-all my-2 group">
       <div className="flex flex-col sm:flex-row items-stretch">
         {/* Thumbnail */}
-        {puja.image && (
+        {getContextualPujaImage({ images: puja.image ? [puja.image] : puja.images }) ? (
           <div className="sm:w-32 h-28 sm:h-auto shrink-0 relative overflow-hidden bg-stone-200 dark:bg-stone-800">
             <img
-              src={puja.image}
+              src={getContextualPujaImage({ images: puja.image ? [puja.image] : puja.images })}
               alt={puja.name}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               loading="lazy"
-              onError={(e) => {
-                e.target.src = 'https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?auto=format&fit=crop&w=400&q=80';
-              }}
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
             {puja.category && (
               <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-black/60 text-white backdrop-blur-sm">
                 {puja.category.split('/')[0].trim()}
               </span>
             )}
+          </div>
+        ) : (
+          <div className="sm:w-32 h-20 sm:h-auto shrink-0 bg-gradient-to-br from-[#702C35] via-[#9D4938] to-[#B58B45] text-white flex items-center justify-center">
+            <span className="text-xl font-serif font-bold">{getPujaInitials(puja.name)}</span>
           </div>
         )}
 

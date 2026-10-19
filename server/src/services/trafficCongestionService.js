@@ -1,11 +1,34 @@
 import { env } from '../config/env.js';
 
+const trafficCache = new Map();
+const trafficInflight = new Map();
+const TRAFFIC_CACHE_TTL_MS = 30_000;
+
 /**
  * Real-time Traffic Congestion & Road Speed Service
  * Measures surrounding road delays around pandal coordinates to detect crowd build-up
  * even when an uploaded photo is an idol close-up or lacks direct queue visibility.
  */
 export async function getTrafficCongestionForLocation({ latitude, longitude, locationName, locality }) {
+  const lat = Number(latitude);
+  const lon = Number(longitude);
+  const key = `${lat.toFixed(4)}:${lon.toFixed(4)}`;
+  const cached = trafficCache.get(key);
+  if (cached && cached.expiresAt > Date.now()) return cached.value;
+  if (trafficInflight.has(key)) return trafficInflight.get(key);
+
+  const request = fetchTrafficCongestionForLocation({ latitude, longitude, locationName, locality })
+    .then((result) => {
+      // Do not cache provider failures as fresh live traffic.
+      if (result?.success) trafficCache.set(key, { value: result, expiresAt: Date.now() + TRAFFIC_CACHE_TTL_MS });
+      return result;
+    })
+    .finally(() => trafficInflight.delete(key));
+  trafficInflight.set(key, request);
+  return request;
+}
+
+async function fetchTrafficCongestionForLocation({ latitude, longitude, locationName, locality }) {
   if (!latitude || !longitude) {
     return getDefaultTrafficFallback('Invalid coordinates');
   }

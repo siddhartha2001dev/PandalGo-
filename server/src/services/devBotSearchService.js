@@ -262,7 +262,7 @@ function formatPublicPujaCard(puja, crowdStatus = 'unknown', estimatedWaitMinute
     locality: puja.locality,
     address: puja.address,
     category: puja.category,
-    image: puja.images?.[0] || 'https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?auto=format&fit=crop&w=800&q=80',
+    image: puja.images?.[0] || null,
     description: puja.description ? puja.description.slice(0, 160) + (puja.description.length > 160 ? '...' : '') : '',
     coordinates: puja.location?.coordinates || null,
     crowdStatus,

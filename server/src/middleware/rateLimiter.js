@@ -1,8 +1,9 @@
 import rateLimit from 'express-rate-limit';
+import { env } from '../config/env.js';
 
 export const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // Limit each IP to 300 requests per window
+  windowMs: env.API_RATE_LIMIT_WINDOW_MS,
+  max: env.API_RATE_LIMIT_MAX,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -12,8 +13,8 @@ export const apiLimiter = rateLimit({
 });
 
 export const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 30, // Limit login/register attempts
+  windowMs: env.API_RATE_LIMIT_WINDOW_MS,
+  max: env.AUTH_RATE_LIMIT_MAX,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -24,7 +25,7 @@ export const authLimiter = rateLimit({
 
 export const crowdReportLimiter = rateLimit({
   windowMs: 5 * 60 * 1000,
-  max: 20, // Rate limit crowd observations
+  max: env.CROWD_RATE_LIMIT_MAX,
   standardHeaders: true,
   legacyHeaders: false,
   message: {

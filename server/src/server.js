@@ -1,6 +1,16 @@
 import app from './app.js';
 import { env } from './config/env.js';
-import { connectDB } from './config/db.js';
+import { connectDB, disconnectDB } from './config/db.js';
+import { closePublicCache } from './services/publicCache.js';
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[Process] Unhandled promise rejection:', reason instanceof Error ? reason.message : reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('[Process] Uncaught exception:', error.message);
+  process.exit(1);
+});
 
 async function startServer() {
   try {
@@ -16,12 +26,21 @@ async function startServer() {
       console.log('====================================================');
     });
 
+    let shuttingDown = false;
     const handleShutdown = async (signal) => {
+      if (shuttingDown) return;
+      shuttingDown = true;
       console.log(`\n[Server] Received ${signal}. Shutting down gracefully...`);
-      server.close(() => {
-        console.log('[Server] HTTP server closed.');
+      const forceExit = setTimeout(() => process.exit(1), env.SHUTDOWN_TIMEOUT_MS);
+      forceExit.unref();
+      server.close(async () => {
+        await closePublicCache();
+        await disconnectDB();
+        clearTimeout(forceExit);
+        console.log('[Server] HTTP server and database connections closed.');
         process.exit(0);
       });
+      server.closeIdleConnections?.();
     };
 
     process.on('SIGINT', () => handleShutdown('SIGINT'));

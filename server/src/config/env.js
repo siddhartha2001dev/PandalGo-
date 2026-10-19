@@ -18,6 +18,13 @@ export const env = {
   ACCESS_TOKEN_EXPIRES_IN: process.env.ACCESS_TOKEN_EXPIRES_IN || process.env.JWT_EXPIRES_IN || '15m',
   REFRESH_TOKEN_EXPIRES_IN: process.env.REFRESH_TOKEN_EXPIRES_IN || '30d',
   REFRESH_TOKEN_DAYS: parseInt(process.env.REFRESH_TOKEN_DAYS || '30', 10),
+  REQUEST_TIMEOUT_MS: parseInt(process.env.REQUEST_TIMEOUT_MS || '30000', 10),
+  SHUTDOWN_TIMEOUT_MS: parseInt(process.env.SHUTDOWN_TIMEOUT_MS || '10000', 10),
+  DB_MAX_POOL_SIZE: parseInt(process.env.DB_MAX_POOL_SIZE || '20', 10),
+  DB_MIN_POOL_SIZE: parseInt(process.env.DB_MIN_POOL_SIZE || '1', 10),
+  REDIS_URL: process.env.REDIS_URL || '',
+  REDIS_CACHE_PREFIX: process.env.REDIS_CACHE_PREFIX || 'pandalgo:cache:',
+  REDIS_CONNECT_TIMEOUT_MS: parseInt(process.env.REDIS_CONNECT_TIMEOUT_MS || '1500', 10),
   
   // Cloudinary
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME || '',
@@ -42,6 +49,10 @@ export const env = {
   DEV_BOT_IMPORT_MAX_ROWS: parseInt(process.env.DEV_BOT_IMPORT_MAX_ROWS || '200', 10),
   WEB_SEARCH_ENABLED: process.env.WEB_SEARCH_ENABLED !== 'false',
   WEB_SEARCH_MAX_RESULTS: Math.min(parseInt(process.env.WEB_SEARCH_MAX_RESULTS || '4', 10), 6),
+  API_RATE_LIMIT_WINDOW_MS: parseInt(process.env.API_RATE_LIMIT_WINDOW_MS || String(15 * 60 * 1000), 10),
+  API_RATE_LIMIT_MAX: parseInt(process.env.API_RATE_LIMIT_MAX || '300', 10),
+  AUTH_RATE_LIMIT_MAX: parseInt(process.env.AUTH_RATE_LIMIT_MAX || '30', 10),
+  CROWD_RATE_LIMIT_MAX: parseInt(process.env.CROWD_RATE_LIMIT_MAX || '20', 10),
 };
 
 if (env.NODE_ENV !== 'test' && (!env.JWT_SECRET || env.JWT_SECRET.length < 32)) {

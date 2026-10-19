@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 import { env } from './config/env.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { requestObservability } from './middleware/observability.js';
 
 import authRoutes from './routes/authRoutes.js';
 import pujaRoutes from './routes/pujaRoutes.js';
@@ -24,6 +25,8 @@ const __dirname = path.dirname(__filename);
 const uploadsDir = path.resolve(__dirname, '../uploads');
 
 const app = express();
+
+app.use(requestObservability);
 
 // Render terminates TLS at its proxy; trust only the first proxy hop so
 // secure cookies and rate-limit client IPs behave correctly in production.
@@ -113,6 +116,21 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     service: 'PujoMap API',
     version: '1.0.0',
+  });
+});
+
+// Liveness never depends on MongoDB; Render can use it to detect a running process.
+app.get('/api/live', (req, res) => {
+  res.status(200).json({ status: 'alive', timestamp: new Date().toISOString() });
+});
+
+// Readiness reflects whether this instance can serve database-backed traffic.
+app.get('/api/ready', (req, res) => {
+  const databaseConnected = isDatabaseConnected();
+  res.status(databaseConnected ? 200 : 503).json({
+    status: databaseConnected ? 'ready' : 'not_ready',
+    database: databaseConnected ? 'connected' : 'disconnected',
+    timestamp: new Date().toISOString(),
   });
 });
 

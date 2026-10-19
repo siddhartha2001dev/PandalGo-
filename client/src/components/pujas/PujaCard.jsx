@@ -3,37 +3,7 @@ import { Link } from 'react-router-dom';
 import { MapPin, Navigation, ChevronRight, CheckCircle2, Clock, Route } from 'lucide-react';
 import { CrowdBadge } from '../common/CrowdBadge.jsx';
 import { buildDirectionsUrl, getDirectionsLabel } from '../../lib/directions.js';
-
-const FALLBACK_PANDAL_IMAGES = [
-  'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Bagbazar_Srbojanin_Durga_Puja_2025_01.jpg/800px-Bagbazar_Srbojanin_Durga_Puja_2025_01.jpg',
-  'https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/2016_Durga_Puja_Kolkata_Shobhabazar_Sarbojonin_Durgotsav_Idol_01.jpg/800px-2016_Durga_Puja_Kolkata_Shobhabazar_Sarbojonin_Durgotsav_Idol_01.jpg',
-  'https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Chalta_Bagan_Durga_Puja_2019.jpg/800px-Chalta_Bagan_Durga_Puja_2019.jpg',
-  'https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Haridevpur_41_Pally_Durga_Puja_2019.jpg/800px-Haridevpur_41_Pally_Durga_Puja_2019.jpg',
-  'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Haridevpur_Athletic_Club_Durga_Puja_2019.jpg/800px-Haridevpur_Athletic_Club_Durga_Puja_2019.jpg',
-  'https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/DurgaPuja2018_-_Pandal_of_Ultadanga_Pallyshree_-_Kolkata_2018-10-16_6207.JPG/800px-DurgaPuja2018_-_Pandal_of_Ultadanga_Pallyshree_-_Kolkata_2018-10-16_6207.JPG',
-  'https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/DurgaPuja2018_-_Pandal_of_Jagat_Mukherjee_Park_-_Kolkata_2018-10-16_6221.JPG/800px-DurgaPuja2018_-_Pandal_of_Jagat_Mukherjee_Park_-_Kolkata_2018-10-16_6221.JPG',
-  'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Pandal_at_Durga_Puja_in_Kolkata_2018_01.jpg/800px-Pandal_at_Durga_Puja_in_Kolkata_2018_01.jpg',
-  'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Pandal_at_Durga_Puja_in_Kolkata_2018_23.jpg/800px-Pandal_at_Durga_Puja_in_Kolkata_2018_23.jpg',
-  'https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1633511090164-b43840ea1607?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1601055283742-8b27e81b5553?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1567157577867-05ccb1388e66?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1543007630-9710e4a00a20?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1514565131-fce0801e5785?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1604014237800-1c9102c219da?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=1200&q=80',
-];
-
-function getDeterministicPujaImage(name = '') {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = (hash << 5) - hash + name.charCodeAt(i);
-    hash |= 0;
-  }
-  const index = Math.abs(hash) % FALLBACK_PANDAL_IMAGES.length;
-  return FALLBACK_PANDAL_IMAGES[index];
-}
+import { getContextualPujaImage, getPujaInitials } from '../../lib/pujaImages.js';
 
 export function PujaCard({
   puja,
@@ -43,11 +13,11 @@ export function PujaCard({
   onOpenCrowdModal,
   userLocation = null,
 }) {
-  const initialImage = puja.images?.[0] || getDeterministicPujaImage(puja.name);
+  const initialImage = getContextualPujaImage(puja);
   const [imgSrc, setImgSrc] = useState(initialImage);
 
   useEffect(() => {
-    setImgSrc(puja.images?.[0] || getDeterministicPujaImage(puja.name));
+    setImgSrc(getContextualPujaImage(puja));
   }, [puja.images, puja.name]);
 
   const crowdStatus = crowdInfo?.crowdStatus || 'unknown';
@@ -71,18 +41,20 @@ export function PujaCard({
     >
       {/* Top Media Container */}
       <div className="relative h-44 sm:h-48 w-full bg-[#F4EBDD] dark:bg-[#141210] overflow-hidden">
-        <img
-          src={imgSrc}
-          alt={puja.name}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-          loading="lazy"
-          onError={() => {
-            const fallback = getDeterministicPujaImage(puja.name);
-            if (imgSrc !== fallback) {
-              setImgSrc(fallback);
-            }
-          }}
-        />
+        {imgSrc ? (
+          <img
+            src={imgSrc}
+            alt={puja.name}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
+            onError={() => setImgSrc(null)}
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-[#702C35] via-[#9D4938] to-[#B58B45] flex flex-col items-center justify-center text-white">
+            <span className="text-4xl font-serif font-bold opacity-90">{getPujaInitials(puja.name)}</span>
+            <span className="mt-2 text-[10px] uppercase tracking-widest opacity-75">Image pending verification</span>
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
 
         {/* Top Badges */}

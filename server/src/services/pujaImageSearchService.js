@@ -30,7 +30,9 @@ async function searchGoogleImages(query) {
       safe: 'active',
       imgSize: 'large',
     });
-    const response = await fetch(`https://www.googleapis.com/customsearch/v1?${params}`);
+    const response = await fetch(`https://www.googleapis.com/customsearch/v1?${params}`, {
+      signal: AbortSignal.timeout(7000),
+    });
     if (!response.ok) return [];
     const data = await response.json();
     return (data.items || [])

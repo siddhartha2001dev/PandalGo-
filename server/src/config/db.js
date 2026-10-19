@@ -15,8 +15,8 @@ export async function connectDB() {
         connectTimeoutMS: 10000,
         socketTimeoutMS: 20000,
         family: 4,
-        maxPoolSize: 20,
-        minPoolSize: 1,
+        maxPoolSize: env.DB_MAX_POOL_SIZE,
+        minPoolSize: env.DB_MIN_POOL_SIZE,
         serverApi: { version: '1', strict: true, deprecationErrors: true },
       });
       console.log(`[DB] Successfully connected to MongoDB at ${maskedUri}`);

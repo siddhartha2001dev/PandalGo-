@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { MapPin, Navigation, AlertCircle, ShieldCheck, Lock, CheckCircle2 } from 'lucide-react';
+import { MapPin, Navigation, AlertCircle, ShieldCheck, Lock, CheckCircle2, Search } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useTheme } from '../../context/ThemeContext.jsx';
+import { api } from '../../lib/api.js';
 import { DEFAULT_TILE_URL, DEFAULT_ATTRIBUTION, MAP_MAX_ZOOM } from '../../config/mapConfig.js';
 
 const pinIcon = L.divIcon({
@@ -72,6 +73,8 @@ export function LocationPickerMap({
   const [gpsAccuracy, setGpsAccuracy] = useState(null);
   const [permissionNotice, setPermissionNotice] = useState(null);
   const [isGpsVerified, setIsGpsVerified] = useState(false);
+  const [manualQuery, setManualQuery] = useState('');
+  const [manualSearchLoading, setManualSearchLoading] = useState(false);
 
   // Can place remote pins if user is an administrator
   const canPlaceRemotePin = isAdmin && !requireGpsOnly;
@@ -141,6 +144,24 @@ export function LocationPickerMap({
     }
   };
 
+  const handleManualSearch = async (event) => {
+    event.preventDefault();
+    const query = manualQuery.trim();
+    if (!query || !canPlaceRemotePin) return;
+    setManualSearchLoading(true);
+    setPermissionNotice(null);
+    setGpsError(null);
+    try {
+      const { data } = await api.get('/pujas/geocode-location', { params: { q: query } });
+      handleManualMapClick(data.coordinates);
+      setManualQuery(data.displayName || query);
+    } catch (error) {
+      setGpsError(error.message || 'Could not find that location. Try a landmark, locality, or address.');
+    } finally {
+      setManualSearchLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-3">
       {/* Header & GPS button */}
@@ -184,6 +205,29 @@ export function LocationPickerMap({
             </p>
           </div>
         </div>
+      )}
+
+      {canPlaceRemotePin && (
+        <form onSubmit={handleManualSearch} className="flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+            <input
+              value={manualQuery}
+              onChange={(event) => setManualQuery(event.target.value)}
+              placeholder="Search a locality, landmark, or address"
+              className="w-full rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 pl-9 pr-3 py-2.5 text-sm text-stone-900 dark:text-stone-100 outline-none focus:ring-2 focus:ring-festival-500"
+              aria-label="Search for a custom location"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={manualSearchLoading || !manualQuery.trim()}
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-stone-900 dark:bg-stone-100 px-4 py-2.5 text-sm font-bold text-white dark:text-stone-900 disabled:opacity-50"
+          >
+            <Search className="w-4 h-4" />
+            {manualSearchLoading ? 'Searching...' : 'Find location'}
+          </button>
+        </form>
       )}
 
       {permissionNotice && (

@@ -127,6 +127,7 @@ export function CreatePostPage() {
 
         const uploadRes = await api.post('/upload', formData, {
           timeout: 120000,
+          headers: { 'Content-Type': 'multipart/form-data' },
         });
 
         if (!uploadRes.data?.success || !Array.isArray(uploadRes.data?.urls)) {

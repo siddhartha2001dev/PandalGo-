@@ -180,6 +180,11 @@ async function refreshAccessToken() {
 api.interceptors.request.use((config) => {
   const accessToken = getToken(ACCESS_TOKEN_SUFFIX);
   config.headers = config.headers || {};
+  // Let the browser add the multipart boundary for FormData uploads. Keeping
+  // the JSON default here makes multer receive an empty `req.files` array.
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
+  }
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
   }

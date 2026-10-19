@@ -21,9 +21,9 @@ import {
   Scan,
   Lightbulb,
   X,
-  Sparkles,
 } from 'lucide-react';
 import { CrowdBadge } from '../common/CrowdBadge.jsx';
+import CrystalizedBall from './CrystalizedBall.jsx';
 
 /**
  * Three-Stage Progress Indicator
@@ -113,37 +113,6 @@ function ProgressStages({ stage, isScanning, isSuccess, isError }) {
           );
         })}
       </div>
-    </div>
-  );
-}
-
-function IndianAICrowdOrb({ active = false }) {
-  return (
-    <div
-      className={`ai-orb-scene ${active ? 'ai-orb-scene-active' : ''}`}
-      role="img"
-      aria-label="Indian-inspired AI crowd intelligence scanner"
-    >
-      <div className="ai-orb-halo ai-orb-halo-one" />
-      <div className="ai-orb-halo ai-orb-halo-two" />
-      <div className="ai-orb-orbit ai-orb-orbit-one" />
-      <div className="ai-orb-orbit ai-orb-orbit-two" />
-      <div className="ai-orb">
-        <div className="ai-orb-grid" />
-        <svg className="ai-orb-mandala" viewBox="0 0 100 100" aria-hidden="true">
-          {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => (
-            <path
-              key={angle}
-              d="M50 44C44 37 44 27 50 18C56 27 56 37 50 44Z"
-              transform={`rotate(${angle} 50 50)`}
-            />
-          ))}
-          <circle cx="50" cy="50" r="8" />
-          <circle cx="50" cy="50" r="3" className="ai-orb-core" />
-        </svg>
-        <span className="ai-orb-label">AI</span>
-      </div>
-      <span className="ai-orb-caption">শক্তি scan</span>
     </div>
   );
 }
@@ -633,7 +602,21 @@ export function AutoCrowdDetectModal({ isOpen, onClose, puja, onDetectionSuccess
             </div>
 
             {/* Indian-inspired AI orb: a glowing 3D intelligence core wrapped in an alpana mandala */}
-            <IndianAICrowdOrb active={isScanning} />
+            <div
+              className="relative mx-auto h-36 w-full max-w-[280px] sm:h-44"
+              role="img"
+              aria-label="AI crowd intelligence scanner"
+            >
+              <CrystalizedBall
+                preset="plasma"
+                color="#D4AF37"
+                size={0.72}
+                crackle={0.85}
+                fill={0.5}
+                interactive
+                hoverStrength={0.7}
+              />
+            </div>
 
             {/* Scanning Status Heading (Section 4) */}
             <div className="flex items-center justify-between gap-3 pb-2 border-b border-[#B58B45]/20">

@@ -23,7 +23,7 @@ const SYSTEM_PROMPT_VISITOR = `You are Dev Bot, the official intelligent AI guid
 Your purpose is to help festival hoppers discover authentic Durga Puja pandals, plan pandal hopping routes, check crowd queue times, and navigate to destination pandals across West Bengal.
 
 Strict Output & Formatting Rules:
-1. Grounding in Official Records: Rely strictly on verified database records in [VERIFIED PUJAS IN DATABASE]. Never invent pandal names, fake coordinates, fake distances, or imaginary crowd levels. If a pandal cannot be found, politely state that it is not yet registered in the verified directory.
+1. Grounding in Official Records: Use verified database records in [VERIFIED PUJAS IN DATABASE] for pandal identity, coordinates, addresses, and crowd data. For general history, cultural context, or factual questions, use [INDEXED WEB RESULTS] when supplied and clearly distinguish web facts from official directory records. Never invent pandal names, fake coordinates, fake distances, or imaginary crowd levels.
 2. Direct Clean Formatting:
    - Use clean, standard Markdown (e.g. bold **Name**, bullet points, short paragraphs).
    - NEVER output raw HTML tags (do NOT output '<a href=...', '<div>', '<br>', etc.). Use markdown links [Title](url) if necessary.
@@ -385,6 +385,14 @@ The user has shared their live GPS coordinates. Use their current position to de
       }
     } else if (attachedPlaces.length > 0) {
       assistantContent = `I found **${attachedPlaces.length}** nearby places. Open the external map link on a card for the exact location.`;
+    } else if (webResults.length > 0) {
+      const webSummary = webResults.slice(0, 3)
+        .map((item) => `- [${item.title}](${item.url})${item.snippet ? ` — ${item.snippet}` : ''}`)
+        .join('\n');
+      const directoryContext = attachedPujas.length > 0
+        ? `\n\nI also found **${attachedPujas.length}** matching verified PandalGo directory record${attachedPujas.length === 1 ? '' : 's'} in the cards below. Use those cards for official address and map details.`
+        : '';
+      assistantContent = `Here is the externally researched context for **${message}**:\n\n${webSummary}${directoryContext}`;
     } else if (attachedPujas.length > 0) {
       const nearbyRequest = /near\s*me|nearby|closest|around\s*here/i.test(lower);
       const crowdRequest = /crowd|queue|wait|line|status/i.test(lower);
@@ -398,11 +406,6 @@ The user has shared their live GPS coordinates. Use their current position to de
       assistantContent = `${nearbyRequest ? 'I found these verified pandals closest to your shared location.' : crowdRequest ? 'Here are the verified crowd matches from the directory.' : `I found ${attachedPujas.length} verified pandal${attachedPujas.length === 1 ? '' : 's'} for your search.`}\n\n${preview}\n\nUse **Open Maps** for the exact location pin or **Get Directions** for a route. “No fresh crowd report” means the directory has no current verified report.`;
     } else if (locationResult) {
       assistantContent = `I could not find **${locationResult.displayName}** in the approved PandalGo directory yet, but here is the direct map location:\n\n[Open ${locationResult.displayName} in Google Maps](${locationResult.mapUrl})\n\nIf you share the exact committee or street name, I can narrow it down further.`;
-    } else if (webResults.length > 0) {
-      const webSummary = webResults.slice(0, 3)
-        .map((item) => `- [${item.title}](${item.url})${item.snippet ? ` — ${item.snippet}` : ''}`)
-        .join('\n');
-      assistantContent = `I found a few relevant web sources for **${message}**:\n\n${webSummary}`;
     } else if (/near\s*me|nearby|closest|around\s*here/i.test(lower) && !userCoords) {
       assistantContent = `To find pandals closest to you, tap **Send Live Location** below, or search by neighborhood (for example, “Pandals near College Square” or “Pandals in Bagbazar”).`;
     } else if (/near\s*me|nearby|closest|around\s*here/i.test(lower)) {

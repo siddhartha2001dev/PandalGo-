@@ -99,6 +99,7 @@
   .devbot-mobile-shell {
     overscroll-behavior: none;
     touch-action: none;
+    contain: layout style paint;
   }
 
   .devbot-mobile-shell .devbot-messages {
@@ -117,6 +118,7 @@
       left: 0;
       right: 0;
       width: 100%;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     .devbot-mobile-shell > div {

@@ -107,25 +107,24 @@ export function DevBotPanel({ isOpen, onClose }) {
     if (isOpen) {
       const originalBodyOverflow = document.body.style.overflow;
       const originalBodyOverscroll = document.body.style.overscrollBehavior;
-      const originalBodyPosition = document.body.style.position;
-      const originalBodyTop = document.body.style.top;
-      const originalBodyWidth = document.body.style.width;
       const originalHtmlOverflow = document.documentElement.style.overflow;
       const originalHtmlOverscroll = document.documentElement.style.overscrollBehavior;
-      const scrollY = window.scrollY;
       const viewport = window.visualViewport;
       const updateViewportHeight = () => {
         const height = viewport?.height || window.innerHeight;
         const top = viewport?.offsetTop || 0;
         document.documentElement.style.setProperty('--devbot-viewport-height', `${height}px`);
         document.documentElement.style.setProperty('--devbot-viewport-top', `${top}px`);
+
+        // Keep the composer above the on-screen keyboard without scrolling the
+        // document or moving the fixed chat sheet itself.
+        if (document.activeElement === inputRef.current) {
+          window.requestAnimationFrame(() => inputRef.current?.scrollIntoView({ block: 'nearest' }));
+        }
       };
       if (window.innerWidth < 640) {
         document.body.style.overflow = 'hidden';
         document.body.style.overscrollBehavior = 'none';
-        document.body.style.position = 'fixed';
-        document.body.style.top = `-${scrollY}px`;
-        document.body.style.width = '100%';
         document.documentElement.style.overflow = 'hidden';
         document.documentElement.style.overscrollBehavior = 'none';
         updateViewportHeight();
@@ -135,16 +134,12 @@ export function DevBotPanel({ isOpen, onClose }) {
       return () => {
         document.body.style.overflow = originalBodyOverflow;
         document.body.style.overscrollBehavior = originalBodyOverscroll;
-        document.body.style.position = originalBodyPosition;
-        document.body.style.top = originalBodyTop;
-        document.body.style.width = originalBodyWidth;
         document.documentElement.style.overflow = originalHtmlOverflow;
         document.documentElement.style.overscrollBehavior = originalHtmlOverscroll;
         viewport?.removeEventListener('resize', updateViewportHeight);
         viewport?.removeEventListener('scroll', updateViewportHeight);
         document.documentElement.style.removeProperty('--devbot-viewport-height');
         document.documentElement.style.removeProperty('--devbot-viewport-top');
-        window.scrollTo(0, scrollY);
       };
     }
   }, [isOpen]);

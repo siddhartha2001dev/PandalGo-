@@ -2,6 +2,7 @@ import app from './app.js';
 import { env } from './config/env.js';
 import { connectDB, disconnectDB } from './config/db.js';
 import { closePublicCache } from './services/publicCache.js';
+import { backfillCommunityPujas } from './services/communityPujaMigration.js';
 
 process.on('unhandledRejection', (reason) => {
   console.error('[Process] Unhandled promise rejection:', reason instanceof Error ? reason.message : reason);
@@ -15,6 +16,10 @@ process.on('uncaughtException', (error) => {
 async function startServer() {
   try {
     await connectDB();
+    const migration = await backfillCommunityPujas();
+    if (migration.linked || migration.skipped) {
+      console.log(`[Migration] Community pandal backfill complete: ${migration.linked} linked, ${migration.skipped} skipped.`);
+    }
 
     const server = app.listen(env.PORT, () => {
       console.log('====================================================');

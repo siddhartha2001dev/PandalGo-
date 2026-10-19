@@ -1,6 +1,7 @@
 import { Post } from '../models/Post.js';
 import { Puja } from '../models/Puja.js';
 import { getCrowdEstimateForPuja } from '../services/crowdService.js';
+import { clearPublicCache } from '../services/publicCache.js';
 
 export async function createPost(req, res, next) {
   try {
@@ -52,6 +53,8 @@ export async function createPost(req, res, next) {
     const populated = await Post.findById(post._id)
       .populate('authorId', 'name avatar')
       .populate('associatedPujaId', 'name slug locality status');
+
+    clearPublicCache('puja-suggestions:');
 
     res.status(201).json({
       success: true,

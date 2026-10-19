@@ -545,6 +545,38 @@ export function HomePage() {
                     </div>
                   )}
 
+                  {suggestionsData?.communityPosts && suggestionsData.communityPosts.length > 0 && (
+                    <div className="p-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#686358] dark:text-[#B8AF9F] px-2 block mb-1">
+                        Community Updates
+                      </span>
+                      <div className="space-y-1">
+                        {suggestionsData.communityPosts.map((post) => (
+                          <Link
+                            key={post._id}
+                            to="/posts"
+                            onClick={() => setIsSearchFocused(false)}
+                            className="w-full px-3 py-2 rounded-xl hover:bg-[#F4EBDD] dark:hover:bg-[#25201C] flex items-center gap-2 text-left transition-colors group"
+                          >
+                            {post.image ? (
+                              <img src={post.image} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" />
+                            ) : (
+                              <MessageSquarePlus className="w-4 h-4 text-[#C74732] shrink-0" />
+                            )}
+                            <div className="min-w-0">
+                              <h5 className="font-serif font-bold text-xs text-[#282520] dark:text-[#F9F6F0] group-hover:text-[#C74732] dark:group-hover:text-[#D4AF37] truncate">
+                                {post.title}
+                              </h5>
+                              <p className="text-[11px] text-[#686358] dark:text-[#B8AF9F] truncate">
+                                {post.locality} · {post.category}
+                              </p>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Matching Localities */}
                   {suggestionsData?.localities && suggestionsData.localities.length > 0 && (
                     <div className="p-2">

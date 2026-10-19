@@ -354,6 +354,23 @@ export async function getSearchSuggestions(req, res, next) {
       })
     );
 
+    // Community posts are stored separately from the verified pandal directory,
+    // but location-related published posts should still be discoverable from
+    // the home search (especially "New Pandal Suggestion" reports).
+    const communityPosts = await Post.find({
+      moderationStatus: 'published',
+      $or: [
+        { title: regex },
+        { description: regex },
+        { locality: regex },
+        { category: regex },
+      ],
+    })
+      .sort({ createdAt: -1 })
+      .limit(6)
+      .select('title description locality category images createdAt associatedPujaId')
+      .populate('associatedPujaId', 'name slug');
+
     // 2. Search matching standard localities
     const allLocalities = [
       'North Kolkata',
@@ -384,6 +401,16 @@ export async function getSearchSuggestions(req, res, next) {
       success: true,
       query: queryStr,
       pujas: pujasWithCrowd,
+      communityPosts: communityPosts.map((post) => ({
+        _id: post._id,
+        title: post.title || post.description.slice(0, 90),
+        description: post.description,
+        locality: post.locality,
+        category: post.category,
+        image: post.images?.[0] || null,
+        createdAt: post.createdAt,
+        associatedPuja: post.associatedPujaId || null,
+      })),
       localities: matchedLocalities,
     };
     res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=60');

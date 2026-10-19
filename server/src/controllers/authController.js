@@ -18,7 +18,7 @@ function generateAccessToken(user) {
   );
 }
 
-function generateRefreshToken(user) {
+function generateRefreshToken(user, familyId = crypto.randomUUID()) {
   const jti = crypto.randomUUID();
   return {
     token: jwt.sign({ id: user._id, type: 'refresh' }, env.JWT_SECRET, {
@@ -27,6 +27,7 @@ function generateRefreshToken(user) {
       algorithm: 'HS256',
     }),
     jti,
+    familyId,
   };
 }
 
@@ -42,23 +43,36 @@ function cookieOptions(refresh = false, req = null) {
   };
 }
 
-async function createRefreshSession(user, token, jti, req) {
+function getDeviceContext(req) {
+  return {
+    deviceId: (req.get('x-device-id') || '').slice(0, 160),
+    deviceName: (req.get('x-device-name') || '').slice(0, 120),
+    platform: (req.get('sec-ch-ua-platform') || '').slice(0, 80),
+  };
+}
+
+async function createRefreshSession(user, token, jti, familyId, req) {
   const decoded = jwt.decode(token);
+  const device = getDeviceContext(req);
   return RefreshSession.create({
     userId: user._id,
     jti,
+    familyId,
     tokenHash: hashToken(token),
     expiresAt: new Date(decoded.exp * 1000),
     userAgent: req.get('user-agent') || '',
     ipAddress: req.ip || '',
+    ...device,
   });
 }
 
 async function issueTokenPair(res, user, req) {
   const refresh = generateRefreshToken(user);
-  await createRefreshSession(user, refresh.token, refresh.jti, req);
-  res.cookie(ACCESS_COOKIE, generateAccessToken(user), cookieOptions(false, req));
+  const accessToken = generateAccessToken(user);
+  await createRefreshSession(user, refresh.token, refresh.jti, refresh.familyId, req);
+  res.cookie(ACCESS_COOKIE, accessToken, cookieOptions(false, req));
   res.cookie(REFRESH_COOKIE, refresh.token, cookieOptions(true, req));
+  return { accessToken, refreshToken: refresh.token };
 }
 
 function publicUser(user) {
@@ -81,8 +95,8 @@ export async function register(req, res, next) {
     }
     const passwordHash = await bcrypt.hash(password, await bcrypt.genSalt(10));
     const user = await User.create({ name, email: normalizedEmail, passwordHash, role: 'visitor' });
-    await issueTokenPair(res, user, req);
-    return res.status(201).json({ success: true, message: 'Account registered successfully. Welcome to PujoMap!', user: publicUser(user) });
+    const tokens = await issueTokenPair(res, user, req);
+    return res.status(201).json({ success: true, message: 'Account registered successfully. Welcome to PujoMap!', user: publicUser(user), ...tokens });
   } catch (err) {
     return next(err);
   }
@@ -95,8 +109,8 @@ export async function login(req, res, next) {
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ success: false, message: 'Invalid email or password credentials.' });
     }
-    await issueTokenPair(res, user, req);
-    return res.json({ success: true, message: 'Logged in successfully.', user: publicUser(user) });
+    const tokens = await issueTokenPair(res, user, req);
+    return res.json({ success: true, message: 'Logged in successfully.', user: publicUser(user), ...tokens });
   } catch (err) {
     return next(err);
   }
@@ -104,7 +118,7 @@ export async function login(req, res, next) {
 
 export async function refresh(req, res, next) {
   try {
-    const refreshToken = req.cookies?.[REFRESH_COOKIE];
+    const refreshToken = req.cookies?.[REFRESH_COOKIE] || req.body?.refreshToken;
     if (!refreshToken) return res.status(401).json({ success: false, message: 'Refresh session not found. Please log in again.' });
 
     const decoded = jwt.verify(refreshToken, env.JWT_SECRET, { algorithms: ['HS256'] });
@@ -113,23 +127,37 @@ export async function refresh(req, res, next) {
     const session = await RefreshSession.findOne({
       jti: decoded.jti,
       tokenHash: hashToken(refreshToken),
-      revokedAt: null,
-      expiresAt: { $gt: new Date() },
     });
-    if (!session) return res.status(401).json({ success: false, message: 'Refresh session expired or revoked. Please log in again.' });
+    if (!session || session.expiresAt <= new Date()) {
+      return res.status(401).json({ success: false, message: 'Refresh session expired. Please log in again.' });
+    }
+    if (session.revokedAt) {
+      await RefreshSession.updateMany({ familyId: session.familyId, revokedAt: null }, { revokedAt: new Date() });
+      return res.status(401).json({ success: false, message: 'Refresh token reuse detected. This device session has been revoked.' });
+    }
+
+    const device = getDeviceContext(req);
+    if (session.deviceId && device.deviceId && session.deviceId !== device.deviceId) {
+      await RefreshSession.updateMany({ familyId: session.familyId, revokedAt: null }, { revokedAt: new Date() });
+      return res.status(401).json({ success: false, message: 'Device verification failed. Please log in again.' });
+    }
 
     const user = await User.findById(decoded.id).select('-passwordHash');
     if (!user) return res.status(401).json({ success: false, message: 'User account not found or has been deactivated.' });
 
-    const nextRefresh = generateRefreshToken(user);
+    const familyId = session.familyId || crypto.randomUUID();
+    const nextRefresh = generateRefreshToken(user, familyId);
     session.revokedAt = new Date();
     session.replacedByJti = nextRefresh.jti;
+    session.lastSeenAt = new Date();
+    session.familyId = familyId;
     await session.save();
-    await createRefreshSession(user, nextRefresh.token, nextRefresh.jti, req);
+    await createRefreshSession(user, nextRefresh.token, nextRefresh.jti, nextRefresh.familyId, req);
 
-    res.cookie(ACCESS_COOKIE, generateAccessToken(user), cookieOptions(false, req));
+    const accessToken = generateAccessToken(user);
+    res.cookie(ACCESS_COOKIE, accessToken, cookieOptions(false, req));
     res.cookie(REFRESH_COOKIE, nextRefresh.token, cookieOptions(true, req));
-    return res.json({ success: true });
+    return res.json({ success: true, accessToken, refreshToken: nextRefresh.token });
   } catch (err) {
     if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
       return res.status(401).json({ success: false, message: 'Refresh session expired. Please log in again.' });
@@ -140,7 +168,7 @@ export async function refresh(req, res, next) {
 
 export async function logout(req, res, next) {
   try {
-    const refreshToken = req.cookies?.[REFRESH_COOKIE];
+    const refreshToken = req.cookies?.[REFRESH_COOKIE] || req.body?.refreshToken;
     const decoded = refreshToken ? jwt.decode(refreshToken) : null;
     if (decoded?.jti) {
       await RefreshSession.findOneAndUpdate(
@@ -152,6 +180,40 @@ export async function logout(req, res, next) {
     res.clearCookie(REFRESH_COOKIE, cookieOptions(true, req));
     res.clearCookie('token', cookieOptions(false, req));
     return res.json({ success: true, message: 'Logged out successfully.' });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function listSessions(req, res, next) {
+  try {
+    const sessions = await RefreshSession.find({ userId: req.user._id, revokedAt: null, expiresAt: { $gt: new Date() } })
+      .sort({ lastSeenAt: -1 })
+      .select('_id deviceId deviceName platform userAgent ipAddress createdAt lastSeenAt expiresAt');
+    return res.json({ success: true, sessions });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function revokeSession(req, res, next) {
+  try {
+    const session = await RefreshSession.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user._id, revokedAt: null },
+      { revokedAt: new Date() },
+      { new: true }
+    );
+    if (!session) return res.status(404).json({ success: false, message: 'Active device session not found.' });
+    return res.json({ success: true, message: 'Device session revoked.' });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function revokeAllSessions(req, res, next) {
+  try {
+    await RefreshSession.updateMany({ userId: req.user._id, revokedAt: null }, { revokedAt: new Date() });
+    return res.json({ success: true, message: 'All device sessions revoked. Please log in again on this device.' });
   } catch (err) {
     return next(err);
   }

@@ -2,6 +2,7 @@ import { Puja } from '../models/Puja.js';
 import { generateUniqueSlug } from '../controllers/pujaController.js';
 import { analyzeImageCrowd } from './crowdVisionService.js';
 import { findLatestLocationImage } from './locationImageFinderService.js';
+import { findPujaImage, hasGenericPujaImage } from './pujaImageSearchService.js';
 import { CrowdObservation } from '../models/CrowdObservation.js';
 
 // Verified catalog of famous Kolkata Durga Pujas with precise coordinates [longitude, latitude]
@@ -442,7 +443,16 @@ export async function autoImportVerifiedPujas({ adminUserId }) {
         existing.description = item.description;
         modified = true;
       }
-      if ((!existing.images || existing.images.length === 0) && item.images && item.images.length > 0) {
+      if (hasGenericPujaImage(existing.images || [])) {
+        const searchedImage = await findPujaImage(item);
+        if (searchedImage?.imageUrl) {
+          existing.images = [searchedImage.imageUrl];
+          modified = true;
+        } else if ((!existing.images || existing.images.length === 0) && item.images?.length > 0) {
+          existing.images = item.images;
+          modified = true;
+        }
+      } else if ((!existing.images || existing.images.length === 0) && item.images?.length > 0) {
         existing.images = item.images;
         modified = true;
       }
@@ -459,6 +469,7 @@ export async function autoImportVerifiedPujas({ adminUserId }) {
 
     // Create new approved real pandal
     const slug = await generateUniqueSlug(item.name);
+    const searchedImage = await findPujaImage(item);
     const newPuja = await Puja.create({
       name: item.name,
       slug,
@@ -471,7 +482,7 @@ export async function autoImportVerifiedPujas({ adminUserId }) {
         type: 'Point',
         coordinates: item.coordinates,
       },
-      images: item.images && item.images.length > 0 ? item.images : [
+      images: searchedImage?.imageUrl ? [searchedImage.imageUrl] : item.images && item.images.length > 0 ? item.images : [
         [
           'https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?auto=format&fit=crop&w=1200&q=80',
           'https://images.unsplash.com/photo-1570783307682-f1c7e16345cb?auto=format&fit=crop&w=1200&q=80',

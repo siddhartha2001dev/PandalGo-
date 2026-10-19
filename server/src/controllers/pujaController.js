@@ -4,6 +4,7 @@ import { getCrowdEstimateForPuja, calculateDistanceMeters } from '../services/cr
 import { findPossibleDuplicates } from '../services/duplicateDetector.js';
 import { resolveLocationCoordinates } from '../services/geocodingService.js';
 import { clearPublicCache, getPublicCache, setPublicCache } from '../services/publicCache.js';
+import { findPujaImage, hasGenericPujaImage } from '../services/pujaImageSearchService.js';
 
 export function slugify(text) {
   return text
@@ -101,6 +102,16 @@ export async function getPujas(req, res, next) {
       }
       return plain;
     });
+
+    // Replace generic seed images with name-specific search results. Limit the
+    // work per request so discovery remains responsive for large result sets.
+    const imageRefreshTargets = results.filter((puja) => hasGenericPujaImage(puja.images || [])).slice(0, 12);
+    await Promise.all(imageRefreshTargets.map(async (puja) => {
+      const searchedImage = await findPujaImage(puja);
+      if (!searchedImage?.imageUrl) return;
+      puja.images = [searchedImage.imageUrl];
+      await Puja.updateOne({ _id: puja._id }, { $set: { images: puja.images } });
+    }));
 
     const payload = {
       success: true,

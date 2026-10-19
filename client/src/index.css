@@ -113,7 +113,7 @@
 
   @media (max-width: 639px) {
     .devbot-mobile-shell {
-      top: 0;
+      top: var(--devbot-viewport-top, 0px);
       bottom: auto;
       height: var(--devbot-viewport-height, 100dvh);
       max-height: var(--devbot-viewport-height, 100dvh);

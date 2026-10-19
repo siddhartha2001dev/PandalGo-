@@ -110,13 +110,16 @@ export function DevBotPanel({ isOpen, onClose }) {
       const originalBodyOverscroll = document.body.style.overscrollBehavior;
       const originalHtmlOverflow = document.documentElement.style.overflow;
       const originalHtmlOverscroll = document.documentElement.style.overscrollBehavior;
+      const originalScrollY = window.scrollY;
       const viewport = window.visualViewport;
       const updateViewportHeight = () => {
-        // Keep the sheet anchored to the layout viewport. Only its height
-        // follows the visual viewport so iOS keyboard opening cannot shift the
-        // whole fixed panel or scroll the discovery page underneath it.
+        // The shell is fixed in layout-viewport coordinates. Move it once to
+        // the visual viewport's origin and size it to the visible height;
+        // never subtract a second keyboard height from this measurement.
         const height = Math.round(viewport?.height || window.innerHeight);
+        const top = Math.round(viewport?.offsetTop || 0);
         shellRef.current?.style.setProperty('--devbot-viewport-height', `${height}px`);
+        shellRef.current?.style.setProperty('--devbot-viewport-top', `${top}px`);
       };
       if (window.innerWidth < 640) {
         document.body.style.overflow = 'hidden';
@@ -135,6 +138,8 @@ export function DevBotPanel({ isOpen, onClose }) {
         viewport?.removeEventListener('resize', updateViewportHeight);
         viewport?.removeEventListener('scroll', updateViewportHeight);
         shellRef.current?.style.removeProperty('--devbot-viewport-height');
+        shellRef.current?.style.removeProperty('--devbot-viewport-top');
+        window.scrollTo(0, originalScrollY);
       };
     }
   }, [isOpen]);
@@ -434,10 +439,10 @@ export function DevBotPanel({ isOpen, onClose }) {
   return (
     <div
       ref={shellRef}
-      className={`devbot-mobile-shell fixed sm:transition-all sm:duration-300 sm:ease-out z-[100] ${
+      className={`devbot-mobile-shell fixed left-0 right-0 sm:transition-all sm:duration-300 sm:ease-out z-[100] ${
         isMaximized
-          ? 'inset-2 sm:inset-6 flex flex-col'
-          : 'inset-0 sm:inset-auto sm:bottom-6 sm:right-6 sm:w-[460px] sm:h-[680px] sm:max-h-[calc(100vh-48px)] flex flex-col'
+          ? 'sm:inset-6 flex flex-col'
+          : 'sm:inset-auto sm:bottom-6 sm:right-6 sm:w-[460px] sm:h-[680px] sm:max-h-[calc(100vh-48px)] flex flex-col'
       }`}
     >
       {/* Outer Card Container */}

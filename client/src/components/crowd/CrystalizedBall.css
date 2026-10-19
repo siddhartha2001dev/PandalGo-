@@ -4,3 +4,61 @@
   height: 100%;
   overflow: hidden;
 }
+
+.crystalized-ball-fallback {
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 48% 43%, rgba(255, 255, 255, 0.35) 0 1%, transparent 2%),
+    radial-gradient(circle at 30% 68%, rgba(255, 214, 112, 0.9) 0 1%, transparent 2%),
+    radial-gradient(circle at 65% 62%, rgba(255, 239, 181, 0.85) 0 1%, transparent 2%),
+    radial-gradient(circle at 50% 55%, rgba(212, 175, 55, 0.75), rgba(83, 38, 11, 0.22) 54%, transparent 70%);
+  box-shadow: 0 0 18px rgba(212, 175, 55, 0.95), 0 0 46px rgba(199, 71, 50, 0.45), inset 0 0 24px rgba(255, 238, 180, 0.8);
+  animation: crystalized-ball-pulse 1.8s ease-in-out infinite;
+}
+
+.crystalized-ball-fallback::before,
+.crystalized-ball-fallback::after {
+  content: '';
+  position: absolute;
+  inset: -2%;
+  border: 2px solid rgba(255, 220, 105, 0.95);
+  border-radius: 48% 52% 45% 55%;
+  filter: drop-shadow(0 0 6px rgba(255, 199, 55, 0.95));
+  animation: crystalized-ball-orbit 2.6s linear infinite;
+}
+
+.crystalized-ball-fallback::after {
+  inset: 4%;
+  transform: rotate(62deg);
+  opacity: 0.7;
+  animation-duration: 3.4s;
+  animation-direction: reverse;
+}
+
+.crystalized-ball-fallback-core {
+  position: absolute;
+  inset: 22%;
+  border-radius: 50%;
+  background-image: radial-gradient(circle, rgba(255, 250, 225, 0.95) 0 1px, transparent 2px);
+  background-size: 9px 9px;
+  opacity: 0.75;
+}
+
+@keyframes crystalized-ball-pulse {
+  0%, 100% { transform: scale(0.97); opacity: 0.86; }
+  50% { transform: scale(1.02); opacity: 1; }
+}
+
+@keyframes crystalized-ball-orbit {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crystalized-ball-fallback,
+  .crystalized-ball-fallback::before,
+  .crystalized-ball-fallback::after {
+    animation: none;
+  }
+}

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api } from '../lib/api.js';
+import { api, clearAuthTokens, getStoredRefreshToken, saveAuthTokens } from '../lib/api.js';
 
 const AuthContext = createContext(null);
 
@@ -27,6 +27,7 @@ export function AuthProvider({ children }) {
   const login = async (credentials) => {
     const res = await api.post('/auth/login', credentials);
     if (res.data.success) {
+      saveAuthTokens(res.data);
       setUser(res.data.user);
       return res.data;
     }
@@ -35,6 +36,7 @@ export function AuthProvider({ children }) {
   const register = async (data) => {
     const res = await api.post('/auth/register', data);
     if (res.data.success) {
+      saveAuthTokens(res.data);
       setUser(res.data.user);
       return res.data;
     }
@@ -42,8 +44,9 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      await api.post('/auth/logout');
+      await api.post('/auth/logout', { refreshToken: getStoredRefreshToken() });
     } finally {
+      clearAuthTokens();
       setUser(null);
     }
   };

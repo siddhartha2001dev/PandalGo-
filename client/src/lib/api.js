@@ -29,16 +29,77 @@ export const api = axios.create({
   },
 });
 
+const ACCESS_TOKEN_KEY = 'pandalgo_access_token';
+const REFRESH_TOKEN_KEY = 'pandalgo_refresh_token';
+const DEVICE_ID_KEY = 'pandalgo_device_id';
+
+function getStorageValue(key) {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function setStorageValue(key, value) {
+  try {
+    if (value) window.localStorage.setItem(key, value);
+    else window.localStorage.removeItem(key);
+  } catch {
+    // Storage may be unavailable in private browsing; cookies still work.
+  }
+}
+
+function getDeviceId() {
+  let deviceId = getStorageValue(DEVICE_ID_KEY);
+  if (!deviceId) {
+    deviceId = window.crypto?.randomUUID?.() || `device-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    setStorageValue(DEVICE_ID_KEY, deviceId);
+  }
+  return deviceId;
+}
+
+export function saveAuthTokens(data) {
+  setStorageValue(ACCESS_TOKEN_KEY, data?.accessToken);
+  setStorageValue(REFRESH_TOKEN_KEY, data?.refreshToken);
+}
+
+export function clearAuthTokens() {
+  setStorageValue(ACCESS_TOKEN_KEY, null);
+  setStorageValue(REFRESH_TOKEN_KEY, null);
+}
+
+export function getStoredRefreshToken() {
+  return getStorageValue(REFRESH_TOKEN_KEY);
+}
+
 let refreshPromise = null;
 
 async function refreshAccessToken() {
   if (!refreshPromise) {
-    refreshPromise = api.post('/auth/refresh', null, { timeout: 10000 }).finally(() => {
+    const refreshToken = getStorageValue(REFRESH_TOKEN_KEY);
+    refreshPromise = api.post('/auth/refresh', refreshToken ? { refreshToken } : null, { timeout: 10000 })
+      .then((response) => {
+        saveAuthTokens(response.data);
+        return response;
+      })
+      .finally(() => {
       refreshPromise = null;
-    });
+      });
   }
   return refreshPromise;
 }
+
+api.interceptors.request.use((config) => {
+  const accessToken = getStorageValue(ACCESS_TOKEN_KEY);
+  config.headers = config.headers || {};
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+  config.headers['X-Device-Id'] = getDeviceId();
+  config.headers['X-Device-Name'] = `${navigator.platform || 'Browser'} browser`;
+  return config;
+});
 
 api.interceptors.response.use(
   (response) => response,

@@ -23,7 +23,11 @@ services:
       - key: REFRESH_TOKEN_EXPIRES_IN
         value: 30d
       - key: REFRESH_TOKEN_DAYS
-        value: "30"
+        value: "90"
+      - key: ACCESS_TOKEN_EXPIRES_IN
+        value: 30m
+      - key: REFRESH_TOKEN_EXPIRES_IN
+        value: 90d
       - key: CROWD_RADIUS_METERS
         value: "100"
       - key: CROWD_FRESHNESS_MINUTES

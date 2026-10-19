@@ -98,8 +98,11 @@
   /* Mobile Dev Bot is a viewport sheet; only its message list should scroll. */
   .devbot-mobile-shell {
     overscroll-behavior: none;
-    touch-action: none;
-    contain: layout style paint;
+    background: #FDFBF7;
+  }
+
+  .dark .devbot-mobile-shell {
+    background: #1C1815;
   }
 
   .devbot-mobile-shell .devbot-messages {
@@ -110,7 +113,7 @@
 
   @media (max-width: 639px) {
     .devbot-mobile-shell {
-      top: var(--devbot-viewport-top, 0px);
+      top: 0;
       bottom: auto;
       height: var(--devbot-viewport-height, 100dvh);
       max-height: var(--devbot-viewport-height, 100dvh);
@@ -118,7 +121,6 @@
       left: 0;
       right: 0;
       width: 100%;
-      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     .devbot-mobile-shell > div {

@@ -82,6 +82,7 @@ export function DevBotPanel({ isOpen, onClose }) {
   const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
+  const shellRef = useRef(null);
 
   // Auto-scroll to bottom of conversation
   const scrollToBottom = () => {
@@ -111,16 +112,11 @@ export function DevBotPanel({ isOpen, onClose }) {
       const originalHtmlOverscroll = document.documentElement.style.overscrollBehavior;
       const viewport = window.visualViewport;
       const updateViewportHeight = () => {
-        const height = viewport?.height || window.innerHeight;
-        const top = viewport?.offsetTop || 0;
-        document.documentElement.style.setProperty('--devbot-viewport-height', `${height}px`);
-        document.documentElement.style.setProperty('--devbot-viewport-top', `${top}px`);
-
-        // Keep the composer above the on-screen keyboard without scrolling the
-        // document or moving the fixed chat sheet itself.
-        if (document.activeElement === inputRef.current) {
-          window.requestAnimationFrame(() => inputRef.current?.scrollIntoView({ block: 'nearest' }));
-        }
+        // Keep the sheet anchored to the layout viewport. Only its height
+        // follows the visual viewport so iOS keyboard opening cannot shift the
+        // whole fixed panel or scroll the discovery page underneath it.
+        const height = Math.round(viewport?.height || window.innerHeight);
+        shellRef.current?.style.setProperty('--devbot-viewport-height', `${height}px`);
       };
       if (window.innerWidth < 640) {
         document.body.style.overflow = 'hidden';
@@ -138,8 +134,7 @@ export function DevBotPanel({ isOpen, onClose }) {
         document.documentElement.style.overscrollBehavior = originalHtmlOverscroll;
         viewport?.removeEventListener('resize', updateViewportHeight);
         viewport?.removeEventListener('scroll', updateViewportHeight);
-        document.documentElement.style.removeProperty('--devbot-viewport-height');
-        document.documentElement.style.removeProperty('--devbot-viewport-top');
+        shellRef.current?.style.removeProperty('--devbot-viewport-height');
       };
     }
   }, [isOpen]);
@@ -438,6 +433,7 @@ export function DevBotPanel({ isOpen, onClose }) {
 
   return (
     <div
+      ref={shellRef}
       className={`devbot-mobile-shell fixed sm:transition-all sm:duration-300 sm:ease-out z-[100] ${
         isMaximized
           ? 'inset-2 sm:inset-6 flex flex-col'

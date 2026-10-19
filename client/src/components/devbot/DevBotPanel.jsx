@@ -828,7 +828,7 @@ export function DevBotPanel({ isOpen, onClose }) {
                   : 'Ask about any Durga Puja pandal, area, or crowd...'
               }
               disabled={isLoading}
-              className="flex-1 bg-transparent border-0 resize-none py-1.5 px-2 text-xs sm:text-sm text-[#282520] dark:text-[#F9F6F0] placeholder-stone-400 focus:outline-none max-h-24 leading-relaxed"
+              className="flex-1 bg-transparent border-0 resize-none py-1.5 px-2 text-base sm:text-sm text-[#282520] dark:text-[#F9F6F0] placeholder-stone-400 focus:outline-none max-h-24 leading-relaxed"
             />
 
             {/* Send button */}

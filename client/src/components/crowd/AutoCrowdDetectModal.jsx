@@ -634,7 +634,7 @@ export function AutoCrowdDetectModal({ isOpen, onClose, puja, onDetectionSuccess
                   <div className="ai-crowd-sphere-particles" />
                 </div>
               </div>
-              <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-fuchsia-300/30 bg-black/45 px-3 py-1 text-[10px] font-semibold tracking-[0.18em] text-fuchsia-100/80">
+              <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-amber-300/35 bg-black/45 px-3 py-1 text-[10px] font-semibold tracking-[0.18em] text-amber-100/90">
                 AI CROWD SCAN ACTIVE
               </div>
             </div>

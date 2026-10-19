@@ -25,6 +25,7 @@ const CATEGORIES = [
   'Crowd Update',
   'New Pandal Suggestion',
 ];
+const MAX_IMAGE_SIZE_BYTES = 25 * 1024 * 1024;
 
 export function CreatePostPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -94,6 +95,12 @@ export function CreatePostPage() {
 
   const handleImageSelect = (e) => {
     const files = Array.from(e.target.files || []);
+    const oversizedFile = files.find((file) => file.size > MAX_IMAGE_SIZE_BYTES);
+    if (oversizedFile) {
+      setErrorMessage(`"${oversizedFile.name}" is larger than 25MB. Please choose a smaller image.`);
+      e.target.value = '';
+      return;
+    }
     if (imageFiles.length + files.length > 6) {
       setErrorMessage('A maximum of 6 photographs can be attached.');
       return;
@@ -293,7 +300,7 @@ export function CreatePostPage() {
         {/* Photographs Upload */}
         <div>
           <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-1.5">
-            Photographs <span className="text-stone-400 dark:text-stone-500 font-normal">(Up to 6 images)</span>
+            Photographs <span className="text-stone-400 dark:text-stone-500 font-normal">(Up to 6 images, 25MB each)</span>
           </label>
 
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 pt-1">

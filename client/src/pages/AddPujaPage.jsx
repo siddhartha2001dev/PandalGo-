@@ -27,6 +27,7 @@ const CATEGORIES = [
   'Bonedi Bari / Household',
   'Club / Local',
 ];
+const MAX_IMAGE_SIZE_BYTES = 25 * 1024 * 1024;
 
 export function AddPujaPage() {
   const { user, isAdmin, isLoading: authLoading } = useAuth();
@@ -88,6 +89,12 @@ export function AddPujaPage() {
 
   const handleImageSelect = (e) => {
     const files = Array.from(e.target.files || []);
+    const oversizedFile = files.find((file) => file.size > MAX_IMAGE_SIZE_BYTES);
+    if (oversizedFile) {
+      setErrorMessage(`"${oversizedFile.name}" is larger than 25MB. Please choose a smaller image.`);
+      e.target.value = '';
+      return;
+    }
     if (imageFiles.length + files.length > 5) {
       setErrorMessage('A maximum of 5 photographs can be uploaded.');
       return;
@@ -382,7 +389,7 @@ export function AddPujaPage() {
         {/* Photographs */}
         <div>
           <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-1.5">
-            Photographs <span className="text-stone-400 dark:text-stone-500 font-normal">(Up to 5 images)</span>
+            Photographs <span className="text-stone-400 dark:text-stone-500 font-normal">(Up to 5 images, 25MB each)</span>
           </label>
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 pt-1">
             {previews.map((src, idx) => (

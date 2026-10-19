@@ -522,7 +522,7 @@ export function AutoCrowdDetectModal({ isOpen, onClose, puja, onDetectionSuccess
               {file ? file.name : 'Select or capture a pandal crowd photograph'}
             </span>
             <span className="text-[11px] text-stone-400 dark:text-stone-500 mt-0.5">
-              Supports JPG, PNG, WEBP (Max 5MB)
+              Supports JPG, PNG, WEBP (Max 25MB)
             </span>
           </label>
         )}

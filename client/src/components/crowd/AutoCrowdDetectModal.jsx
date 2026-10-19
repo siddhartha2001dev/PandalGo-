@@ -601,23 +601,6 @@ export function AutoCrowdDetectModal({ isOpen, onClose, puja, onDetectionSuccess
               </svg>
             </div>
 
-            {/* Indian-inspired AI orb: a glowing 3D intelligence core wrapped in an alpana mandala */}
-            <div
-              className="relative mx-auto h-36 w-full max-w-[280px] sm:h-44"
-              role="img"
-              aria-label="AI crowd intelligence scanner"
-            >
-              <CrystalizedBall
-                preset="plasma"
-                color="#D4AF37"
-                size={0.72}
-                crackle={0.85}
-                fill={0.5}
-                interactive
-                hoverStrength={0.7}
-              />
-            </div>
-
             {/* Scanning Status Heading (Section 4) */}
             <div className="flex items-center justify-between gap-3 pb-2 border-b border-[#B58B45]/20">
               <div className="space-y-0.5 min-w-0">
@@ -639,65 +622,25 @@ export function AutoCrowdDetectModal({ isOpen, onClose, puja, onDetectionSuccess
               )}
             </div>
 
-            {/* 5. Image Preview & Scanning Effect */}
-            <div className="relative w-full h-40 sm:h-52 rounded-xl overflow-hidden bg-black/60 border border-[#B58B45]/30">
-              {activeImage ? (
-                <img
-                  src={activeImage}
-                  alt="Crowd Analysis Subject"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center text-stone-400 bg-stone-900/60">
-                  <Camera className="w-8 h-8 text-stone-500 mb-2" />
-                  <span className="text-xs font-medium text-stone-300">
-                    No image currently selected
-                  </span>
-                  <span className="text-[11px] text-stone-500 mt-0.5">
-                    Select a photo or use auto-detect feed
-                  </span>
-                </div>
-              )}
-
-              {/* Subtle Grid Overlay */}
-              <div
-                className="absolute inset-0 pointer-events-none opacity-25"
-                style={{
-                  backgroundImage: `
-                    linear-gradient(to right, rgba(212, 175, 55, 0.15) 1px, transparent 1px),
-                    linear-gradient(to bottom, rgba(212, 175, 55, 0.15) 1px, transparent 1px)
-                  `,
-                  backgroundSize: '24px 24px',
-                }}
+            {/* CrystalizedBall replaces the previous crowd reference-image block. */}
+            <div
+              className="relative flex h-56 w-full items-center justify-center overflow-hidden rounded-xl border border-[#B58B45]/40 bg-[#100B12] shadow-[inset_0_0_42px_rgba(212,175,55,0.08)] sm:h-72"
+              role="img"
+              aria-label="Animated AI crowd intelligence scanner"
+            >
+              <CrystalizedBall
+                preset="plasma"
+                color="#F25BD0"
+                size={0.72}
+                crackle={0.85}
+                fill={0.5}
+                particleCount={12000}
+                interactive
+                hoverStrength={0.7}
               />
-
-              {/* Subtle Antique Gold Scanning-Frame Corners */}
-              <div className="absolute top-2.5 left-2.5 w-4 h-4 border-t-2 border-l-2 border-[#D4AF37] pointer-events-none drop-shadow-sm" />
-              <div className="absolute top-2.5 right-2.5 w-4 h-4 border-t-2 border-r-2 border-[#D4AF37] pointer-events-none drop-shadow-sm" />
-              <div className="absolute bottom-2.5 left-2.5 w-4 h-4 border-b-2 border-l-2 border-[#D4AF37] pointer-events-none drop-shadow-sm" />
-              <div className="absolute bottom-2.5 right-2.5 w-4 h-4 border-b-2 border-r-2 border-[#D4AF37] pointer-events-none drop-shadow-sm" />
-
-              {/* Restrained Horizontal Scanning Line (Active while isScanning) */}
-              {isScanning && (
-                <div className="absolute left-2.5 right-2.5 h-[2px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent drop-shadow-[0_0_8px_rgba(212,175,55,0.85)] animate-scan-line pointer-events-none z-20" />
-              )}
-
-              {/* Subtle processing indicator while scanning */}
-              {isScanning && (
-                <div className="absolute inset-0 bg-black/25 backdrop-blur-[1px] pointer-events-none flex items-center justify-center">
-                  <div className="px-3 py-1.5 rounded-full bg-black/75 border border-[#D4AF37]/50 text-amber-200 text-xs font-medium flex items-center gap-2 shadow-lg">
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#D4AF37]" />
-                    <span>Scanning corridor density...</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Image Source Label */}
-              {activeImage && (
-                <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/75 backdrop-blur-xs text-[10px] text-amber-200 font-sans border border-[#B58B45]/30 max-w-[200px] truncate">
-                  {imageLabel}
-                </div>
-              )}
+              <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-fuchsia-300/30 bg-black/45 px-3 py-1 text-[10px] font-semibold tracking-[0.18em] text-fuchsia-100/80">
+                AI CROWD SCAN ACTIVE
+              </div>
             </div>
 
             {/* 6. Three-Stage Progress Indicator */}

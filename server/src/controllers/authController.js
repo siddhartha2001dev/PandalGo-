@@ -118,7 +118,9 @@ export async function login(req, res, next) {
 
 export async function refresh(req, res, next) {
   try {
-    const refreshToken = req.cookies?.[REFRESH_COOKIE] || req.body?.refreshToken;
+    // Prefer the explicit token sent by the client. Browser cookies are shared
+    // by all same-origin tabs, while the client token is tab-scoped.
+    const refreshToken = req.body?.refreshToken || req.cookies?.[REFRESH_COOKIE];
     if (!refreshToken) return res.status(401).json({ success: false, message: 'Refresh session not found. Please log in again.' });
 
     const decoded = jwt.verify(refreshToken, env.JWT_SECRET, { algorithms: ['HS256'] });
@@ -168,7 +170,7 @@ export async function refresh(req, res, next) {
 
 export async function logout(req, res, next) {
   try {
-    const refreshToken = req.cookies?.[REFRESH_COOKIE] || req.body?.refreshToken;
+    const refreshToken = req.body?.refreshToken || req.cookies?.[REFRESH_COOKIE];
     const decoded = refreshToken ? jwt.decode(refreshToken) : null;
     if (decoded?.jti) {
       await RefreshSession.findOneAndUpdate(

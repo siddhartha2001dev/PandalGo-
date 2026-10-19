@@ -35,6 +35,7 @@ const REFRESH_TOKEN_SUFFIX = 'refresh_token';
 const DEVICE_ID_SUFFIX = 'device_id';
 let inMemoryTabId = null;
 let inMemoryDeviceId = null;
+let proactiveRefreshTimer = null;
 
 function readStorage(storage, key) {
   try {
@@ -92,12 +93,47 @@ function getDeviceId() {
   return deviceId;
 }
 
+function getTokenExpiry(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return Number(payload.exp) * 1000;
+  } catch {
+    return 0;
+  }
+}
+
+function scheduleProactiveRefresh(token) {
+  if (proactiveRefreshTimer) {
+    window.clearTimeout(proactiveRefreshTimer);
+    proactiveRefreshTimer = null;
+  }
+
+  const expiresAt = getTokenExpiry(token);
+  if (!expiresAt) return;
+
+  // Refresh two minutes before expiry so normal API calls never need to wait
+  // for a 401 challenge during an admin form submission.
+  const delay = Math.max(30_000, expiresAt - Date.now() - 120_000);
+  proactiveRefreshTimer = window.setTimeout(() => {
+    proactiveRefreshTimer = null;
+    refreshAccessToken().catch(() => {
+      // Keep the current session intact. The next request can retry refresh;
+      // transient network failures must not log a user out.
+    });
+  }, delay);
+}
+
 export function saveAuthTokens(data) {
   setToken(ACCESS_TOKEN_SUFFIX, data?.accessToken);
   setToken(REFRESH_TOKEN_SUFFIX, data?.refreshToken);
+  if (data?.accessToken) scheduleProactiveRefresh(data.accessToken);
 }
 
 export function clearAuthTokens() {
+  if (proactiveRefreshTimer) {
+    window.clearTimeout(proactiveRefreshTimer);
+    proactiveRefreshTimer = null;
+  }
   setToken(ACCESS_TOKEN_SUFFIX, null);
   setToken(REFRESH_TOKEN_SUFFIX, null);
 }
@@ -106,12 +142,30 @@ export function getStoredRefreshToken() {
   return getToken(REFRESH_TOKEN_SUFFIX);
 }
 
+export async function restoreAuthSession() {
+  const accessToken = getToken(ACCESS_TOKEN_SUFFIX);
+  const refreshToken = getToken(REFRESH_TOKEN_SUFFIX);
+  if (!refreshToken) return false;
+
+  if (accessToken && getTokenExpiry(accessToken) > Date.now() + 120_000) {
+    scheduleProactiveRefresh(accessToken);
+    return true;
+  }
+
+  await refreshAccessToken();
+  return true;
+}
+
 let refreshPromise = null;
 
 async function refreshAccessToken() {
   if (!refreshPromise) {
     const refreshToken = getToken(REFRESH_TOKEN_SUFFIX);
-    refreshPromise = api.post('/auth/refresh', refreshToken ? { refreshToken } : null, { timeout: 10000 })
+    refreshPromise = api.post('/auth/refresh', refreshToken ? { refreshToken } : null, {
+      timeout: 10000,
+      // Do not send the shared browser cookie when refreshing a tab-scoped token.
+      withCredentials: false,
+    })
       .then((response) => {
         saveAuthTokens(response.data);
         return response;
@@ -154,6 +208,9 @@ api.interceptors.response.use(
     }
 
     const message = error.response?.data?.message || error.message || 'Something went wrong';
-    return Promise.reject(new Error(message));
+    const normalizedError = new Error(message);
+    normalizedError.response = error.response;
+    normalizedError.code = error.code;
+    return Promise.reject(normalizedError);
   }
 );

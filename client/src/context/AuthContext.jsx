@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api, clearAuthTokens, getStoredRefreshToken, saveAuthTokens } from '../lib/api.js';
+import { api, clearAuthTokens, getStoredRefreshToken, restoreAuthSession, saveAuthTokens } from '../lib/api.js';
 
 const AuthContext = createContext(null);
 
@@ -9,12 +9,18 @@ export function AuthProvider({ children }) {
 
   const checkAuth = async () => {
     try {
+      await restoreAuthSession();
       const res = await api.get('/auth/me');
       if (res.data.success) {
         setUser(res.data.user);
       }
     } catch (err) {
-      setUser(null);
+      // Only clear a session when the server explicitly rejects it. Keep the
+      // current user during temporary network/server failures.
+      if (err.response?.status === 401) {
+        clearAuthTokens();
+        setUser(null);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -43,8 +49,11 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
+    const refreshToken = getStoredRefreshToken();
     try {
-      await api.post('/auth/logout', { refreshToken: getStoredRefreshToken() });
+      // Keep credentials enabled so the server also clears legacy fallback
+      // cookies; the server revokes the explicit tab token above any cookie.
+      await api.post('/auth/logout', { refreshToken });
     } finally {
       clearAuthTokens();
       setUser(null);

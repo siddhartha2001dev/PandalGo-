@@ -161,6 +161,32 @@ export function HomePage() {
 
   const handleGeocodeLocation = async (query) => {
     if (!query || !query.trim()) return;
+    const normalizedQuery = query.trim().toLowerCase();
+
+    // A complete pandal name is already a directory result. Do not send it to
+    // the geographic geocoder, which only understands places and addresses.
+    const candidatePujas = [
+      ...(suggestionsData?.pujas || []),
+      ...rawPujas,
+    ];
+    const matchingPuja = candidatePujas.find((puja) =>
+      puja.name?.trim().toLowerCase() === normalizedQuery
+    ) || (
+      candidatePujas.length === 1 &&
+      candidatePujas[0]?.name?.toLowerCase().includes(normalizedQuery)
+        ? candidatePujas[0]
+        : null
+    );
+
+    if (matchingPuja) {
+      handleSelectPuja(matchingPuja);
+      setSearchQuery(matchingPuja.name || query.trim());
+      setIsSearchFocused(false);
+      handleSwitchMobileView('map');
+      scrollToMap();
+      return;
+    }
+
     setGeocodingLoading(true);
     setLocationError(null);
     setIsSearchFocused(false);

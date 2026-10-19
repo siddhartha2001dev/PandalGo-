@@ -29,55 +29,88 @@ export const api = axios.create({
   },
 });
 
-const ACCESS_TOKEN_KEY = 'pandalgo_access_token';
-const REFRESH_TOKEN_KEY = 'pandalgo_refresh_token';
-const DEVICE_ID_KEY = 'pandalgo_device_id';
+const TAB_ID_KEY = 'pandalgo_tab_id';
+const ACCESS_TOKEN_SUFFIX = 'access_token';
+const REFRESH_TOKEN_SUFFIX = 'refresh_token';
+const DEVICE_ID_SUFFIX = 'device_id';
+let inMemoryTabId = null;
+let inMemoryDeviceId = null;
 
-function getStorageValue(key) {
+function readStorage(storage, key) {
   try {
-    return window.localStorage.getItem(key);
+    return storage?.getItem(key);
   } catch {
     return null;
   }
 }
 
-function setStorageValue(key, value) {
+function writeStorage(storage, key, value) {
   try {
-    if (value) window.localStorage.setItem(key, value);
-    else window.localStorage.removeItem(key);
+    if (value) storage?.setItem(key, value);
+    else storage?.removeItem(key);
   } catch {
     // Storage may be unavailable in private browsing; cookies still work.
   }
 }
 
+function getTabId() {
+  let tabId = inMemoryTabId || readStorage(window.sessionStorage, TAB_ID_KEY);
+  if (!tabId) {
+    tabId = window.crypto?.randomUUID?.() || `tab-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    writeStorage(window.sessionStorage, TAB_ID_KEY, tabId);
+  }
+  inMemoryTabId = tabId;
+  return tabId;
+}
+
+function scopedKey(suffix) {
+  // sessionStorage gives each normal browser tab its own namespace. The matching
+  // localStorage entry keeps that tab's session available after a reload.
+  return `pandalgo:tab:${getTabId()}:${suffix}`;
+}
+
+function getToken(suffix) {
+  const key = scopedKey(suffix);
+  return readStorage(window.sessionStorage, key) || readStorage(window.localStorage, key);
+}
+
+function setToken(suffix, value) {
+  const key = scopedKey(suffix);
+  writeStorage(window.sessionStorage, key, value);
+  writeStorage(window.localStorage, key, value);
+}
+
 function getDeviceId() {
-  let deviceId = getStorageValue(DEVICE_ID_KEY);
+  const key = scopedKey(DEVICE_ID_SUFFIX);
+  let deviceId = inMemoryDeviceId || readStorage(window.sessionStorage, key) || readStorage(window.localStorage, key);
   if (!deviceId) {
     deviceId = window.crypto?.randomUUID?.() || `device-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    setStorageValue(DEVICE_ID_KEY, deviceId);
+    writeStorage(window.sessionStorage, key, deviceId);
+    writeStorage(window.localStorage, key, deviceId);
   }
+  inMemoryDeviceId = deviceId;
   return deviceId;
 }
 
 export function saveAuthTokens(data) {
-  setStorageValue(ACCESS_TOKEN_KEY, data?.accessToken);
-  setStorageValue(REFRESH_TOKEN_KEY, data?.refreshToken);
+  setToken(ACCESS_TOKEN_SUFFIX, data?.accessToken);
+  setToken(REFRESH_TOKEN_SUFFIX, data?.refreshToken);
 }
 
 export function clearAuthTokens() {
-  setStorageValue(ACCESS_TOKEN_KEY, null);
-  setStorageValue(REFRESH_TOKEN_KEY, null);
+  setToken(ACCESS_TOKEN_SUFFIX, null);
+  setToken(REFRESH_TOKEN_SUFFIX, null);
 }
 
 export function getStoredRefreshToken() {
-  return getStorageValue(REFRESH_TOKEN_KEY);
+  return getToken(REFRESH_TOKEN_SUFFIX);
 }
 
 let refreshPromise = null;
 
 async function refreshAccessToken() {
   if (!refreshPromise) {
-    const refreshToken = getStorageValue(REFRESH_TOKEN_KEY);
+    const refreshToken = getToken(REFRESH_TOKEN_SUFFIX);
     refreshPromise = api.post('/auth/refresh', refreshToken ? { refreshToken } : null, { timeout: 10000 })
       .then((response) => {
         saveAuthTokens(response.data);
@@ -91,13 +124,13 @@ async function refreshAccessToken() {
 }
 
 api.interceptors.request.use((config) => {
-  const accessToken = getStorageValue(ACCESS_TOKEN_KEY);
+  const accessToken = getToken(ACCESS_TOKEN_SUFFIX);
   config.headers = config.headers || {};
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
   }
   config.headers['X-Device-Id'] = getDeviceId();
-  config.headers['X-Device-Name'] = `${navigator.platform || 'Browser'} browser`;
+  config.headers['X-Device-Name'] = `${navigator.platform || 'Browser'} tab ${getTabId().slice(0, 8)}`;
   return config;
 });
 

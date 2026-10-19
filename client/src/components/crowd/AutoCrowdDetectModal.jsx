@@ -317,7 +317,7 @@ export function AutoCrowdDetectModal({ isOpen, onClose, puja, onDetectionSuccess
 
   // Separated Pinned Modal Footer Actions (Section 8)
   const modalFooter = scanResult ? (
-    <div className="w-full flex items-center gap-2.5">
+    <div className="w-full flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2.5">
       <button
         type="button"
         onClick={handleReset}
@@ -334,7 +334,7 @@ export function AutoCrowdDetectModal({ isOpen, onClose, puja, onDetectionSuccess
       </button>
     </div>
   ) : (
-    <div className="w-full flex items-center justify-end gap-2.5">
+    <div className="w-full flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
       <button
         type="button"
         onClick={onClose}
@@ -623,7 +623,7 @@ export function AutoCrowdDetectModal({ isOpen, onClose, puja, onDetectionSuccess
 
             {/* Guaranteed-rendering sphere replaces the previous crowd reference-image block. */}
             <div
-              className="relative flex h-56 w-full items-center justify-center overflow-hidden rounded-xl border border-[#B58B45]/40 bg-[#100B12] shadow-[inset_0_0_42px_rgba(212,175,55,0.08)] sm:h-72"
+              className="relative flex h-44 w-full items-center justify-center overflow-hidden rounded-xl border border-[#B58B45]/40 bg-[#100B12] shadow-[inset_0_0_42px_rgba(212,175,55,0.08)] sm:h-72"
               role="img"
               aria-label="Animated AI crowd intelligence scanner"
             >
@@ -634,7 +634,7 @@ export function AutoCrowdDetectModal({ isOpen, onClose, puja, onDetectionSuccess
                   <div className="ai-crowd-sphere-particles" />
                 </div>
               </div>
-              <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-amber-300/35 bg-black/45 px-3 py-1 text-[10px] font-semibold tracking-[0.18em] text-amber-100/90">
+              <div className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-amber-300/35 bg-black/50 px-2 py-1 text-[9px] font-semibold tracking-[0.1em] text-amber-100/90 sm:bottom-3 sm:px-3 sm:text-[10px] sm:tracking-[0.18em]">
                 AI CROWD SCAN ACTIVE
               </div>
             </div>

@@ -271,6 +271,12 @@ html.dark .leaflet-tile-pane {
   animation: ai-crowd-sphere-float 2.8s ease-in-out infinite;
 }
 
+@media (max-width: 639px) {
+  .ai-crowd-sphere {
+    width: min(68%, 210px);
+  }
+}
+
 .ai-crowd-sphere::before {
   content: '';
   position: absolute;

@@ -454,6 +454,13 @@ export function HomePage() {
           </div>
 
           <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
+            <Link
+              to="/posts"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#C74732] hover:bg-[#A83522] text-white text-xs font-bold shadow-sm transition-colors"
+            >
+              <MessageSquarePlus className="w-3.5 h-3.5" />
+              <span>Community Feed</span>
+            </Link>
             <button
               onClick={() => setAiDetectPuja(selectedPuja || (rawPujas.length > 0 ? rawPujas[0] : null))}
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#F4EBDD] hover:bg-[#E8DEC8] dark:bg-[#27221E] dark:hover:bg-[#342D26] text-[#282520] dark:text-[#F9F6F0] border border-[#E8DEC8] dark:border-[#3A322B] text-xs font-semibold transition-colors"

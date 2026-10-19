@@ -37,6 +37,13 @@ export function PostCard({ post, onDelete, onReport }) {
   const linkedPuja = post.associatedPujaId
     ? { ...post.associatedPujaId, images: post.images || [] }
     : null;
+  const aiPuja = linkedPuja || {
+    name: post.title || `${post.locality} Community Pandal`,
+    locality: post.locality,
+    location: hasCoordinates ? { coordinates: coords } : undefined,
+    images: post.images || [],
+  };
+  const canRunAiScan = hasCoordinates || Boolean(post.images?.length);
 
   const crowdStatus = post.crowdStatus || post.crowdEstimate?.crowdStatus || 'unknown';
   const estimatedWait = post.estimatedWaitMinutes || post.crowdEstimate?.estimatedWaitMinutes;
@@ -171,6 +178,15 @@ export function PostCard({ post, onDelete, onReport }) {
                   <Navigation className="w-3 h-3" /> Trace on Map
                 </Link>
               )}
+              {canRunAiScan && (
+                <button
+                  type="button"
+                  onClick={() => setScanningPuja(aiPuja)}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#C74732] hover:bg-[#991B1B] text-white font-bold text-[11px] transition-colors"
+                >
+                  <Scan className="w-3 h-3" /> AI Scan
+                </button>
+              )}
               {linkedPuja?.status === 'approved' && (
                 <>
                   <button
@@ -179,13 +195,6 @@ export function PostCard({ post, onDelete, onReport }) {
                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#F4EBDD] dark:bg-[#2A2420] hover:bg-[#E8DEC8] dark:hover:bg-[#352D26] text-[#C74732] dark:text-[#D4AF37] font-bold text-[11px] border border-[#E8DEC8] dark:border-[#3A322B] transition-colors"
                   >
                     <Users className="w-3 h-3" /> Report Crowd
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setScanningPuja(linkedPuja)}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#C74732] hover:bg-[#991B1B] text-white font-bold text-[11px] transition-colors"
-                  >
-                    <Scan className="w-3 h-3" /> AI Scan
                   </button>
                 </>
               )}

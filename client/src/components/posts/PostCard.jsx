@@ -12,8 +12,11 @@ import {
   Compass,
   X,
   Users,
+  Scan,
 } from 'lucide-react';
 import { CrowdBadge } from '../common/CrowdBadge.jsx';
+import { CrowdReportModal } from '../crowd/CrowdReportModal.jsx';
+import { AutoCrowdDetectModal } from '../crowd/AutoCrowdDetectModal.jsx';
 import { Modal } from '../common/Modal.jsx';
 import { ComponentLayout } from '../layout/ComponentLayout.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -22,6 +25,8 @@ export function PostCard({ post, onDelete, onReport }) {
   const { user, isAdmin } = useAuth();
   const [selectedImage, setSelectedImage] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [reportingPuja, setReportingPuja] = useState(null);
+  const [scanningPuja, setScanningPuja] = useState(null);
 
   const authorName = post.authorId?.name || 'Pandal Hopper';
   const authorInitial = authorName.charAt(0).toUpperCase();
@@ -29,6 +34,9 @@ export function PostCard({ post, onDelete, onReport }) {
 
   const coords = post.pandalCoordinates || post.coordinates || post.associatedPujaId?.location?.coordinates;
   const hasCoordinates = coords && coords.length === 2;
+  const linkedPuja = post.associatedPujaId
+    ? { ...post.associatedPujaId, images: post.images || [] }
+    : null;
 
   const crowdStatus = post.crowdStatus || post.crowdEstimate?.crowdStatus || 'unknown';
   const estimatedWait = post.estimatedWaitMinutes || post.crowdEstimate?.estimatedWaitMinutes;
@@ -163,6 +171,24 @@ export function PostCard({ post, onDelete, onReport }) {
                   <Navigation className="w-3 h-3" /> Trace on Map
                 </Link>
               )}
+              {linkedPuja?.status === 'approved' && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setReportingPuja(linkedPuja)}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#F4EBDD] dark:bg-[#2A2420] hover:bg-[#E8DEC8] dark:hover:bg-[#352D26] text-[#C74732] dark:text-[#D4AF37] font-bold text-[11px] border border-[#E8DEC8] dark:border-[#3A322B] transition-colors"
+                  >
+                    <Users className="w-3 h-3" /> Report Crowd
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setScanningPuja(linkedPuja)}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#C74732] hover:bg-[#991B1B] text-white font-bold text-[11px] transition-colors"
+                  >
+                    <Scan className="w-3 h-3" /> AI Scan
+                  </button>
+                </>
+              )}
               {hasCoordinates && (
                 <a
                   href={`https://www.google.com/maps/dir/?api=1&destination=${coords[1]},${coords[0]}`}
@@ -221,6 +247,22 @@ export function PostCard({ post, onDelete, onReport }) {
             className="max-w-full max-h-[82dvh] object-contain rounded-2xl shadow-2xl border border-white/10"
           />
         </Modal>
+      )}
+
+      {reportingPuja && (
+        <CrowdReportModal
+          isOpen={Boolean(reportingPuja)}
+          onClose={() => setReportingPuja(null)}
+          puja={reportingPuja}
+        />
+      )}
+
+      {scanningPuja && (
+        <AutoCrowdDetectModal
+          isOpen={Boolean(scanningPuja)}
+          onClose={() => setScanningPuja(null)}
+          puja={scanningPuja}
+        />
       )}
     </ComponentLayout>
   );

@@ -3,6 +3,26 @@ import { Puja } from '../models/Puja.js';
 import { getCrowdEstimateForPuja } from '../services/crowdService.js';
 import { clearPublicCache } from '../services/publicCache.js';
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+async function generateCommunityPujaSlug(name) {
+  const base = name
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w-]+/g, '')
+    .replace(/--+/g, '-') || 'community-pandal';
+
+  let slug = base;
+  let counter = 1;
+  while (await Puja.exists({ slug })) {
+    slug = `${base}-${counter}`;
+    counter += 1;
+  }
+  return slug;
+}
+
 export async function createPost(req, res, next) {
   try {
     const {
@@ -17,24 +37,53 @@ export async function createPost(req, res, next) {
       category,
     } = req.body;
 
-    let locationData = undefined;
-    if (coordinates && coordinates.length === 2) {
-      locationData = {
-        type: 'Point',
-        coordinates,
-      };
-    }
-
-    // Verify associated pandal exists if specified
+    let linkedPuja = null;
     if (associatedPujaId) {
-      const exists = await Puja.exists({ _id: associatedPujaId });
-      if (!exists) {
+      linkedPuja = await Puja.findById(associatedPujaId);
+      if (!linkedPuja) {
         return res.status(400).json({
           success: false,
           message: 'The associated Durga Puja pandal was not found.',
         });
       }
+    } else {
+      if (!coordinates || coordinates.length !== 2) {
+        return res.status(400).json({
+          success: false,
+          message: 'Capture the pandal location with GPS before publishing a new community pandal post.',
+        });
+      }
+
+      const pandalName = (title?.trim() || description.trim().split(/[.!?\n]/)[0] || `${locality} Community Pandal`).slice(0, 150);
+      linkedPuja = await Puja.findOne({
+        name: new RegExp(`^${escapeRegex(pandalName)}$`, 'i'),
+        locality: new RegExp(`^${escapeRegex(locality.trim())}$`, 'i'),
+      });
+
+      if (!linkedPuja) {
+        const isVerifiedLocation = req.user.role === 'admin' || locationSource === 'gps';
+        linkedPuja = await Puja.create({
+          name: pandalName,
+          slug: await generateCommunityPujaSlug(pandalName),
+          description: description.trim().slice(0, 2000),
+          address: locality.trim(),
+          locality: locality.trim(),
+          category: 'Community / Baroari',
+          festivalYear: new Date().getFullYear(),
+          timings: 'Open 24 Hours during Puja days',
+          location: { type: 'Point', coordinates },
+          images: images || [],
+          status: isVerifiedLocation ? 'approved' : 'pending',
+          createdBy: req.user._id,
+          reviewedBy: isVerifiedLocation ? req.user._id : null,
+          reviewedAt: isVerifiedLocation ? new Date() : null,
+        });
+      }
     }
+
+    const locationData = coordinates?.length === 2
+      ? { type: 'Point', coordinates }
+      : linkedPuja.location;
 
     const post = await Post.create({
       authorId: req.user._id,
@@ -45,7 +94,7 @@ export async function createPost(req, res, next) {
       location: locationData,
       locationSource: locationSource || null,
       reportedGpsAccuracy: reportedGpsAccuracy || null,
-      associatedPujaId: associatedPujaId || null,
+      associatedPujaId: linkedPuja._id,
       category: category || 'Puja Experience',
       moderationStatus: 'published',
     });
@@ -54,6 +103,7 @@ export async function createPost(req, res, next) {
       .populate('authorId', 'name avatar')
       .populate('associatedPujaId', 'name slug locality status');
 
+    clearPublicCache('pujas:');
     clearPublicCache('puja-suggestions:');
 
     res.status(201).json({

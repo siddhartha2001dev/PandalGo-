@@ -132,6 +132,11 @@ export function CreatePostPage() {
       return;
     }
 
+    if (!associatedPujaId && (!coordinates || coordinates.length !== 2)) {
+      setErrorMessage('Capture the pandal location with GPS before publishing a new community pandal post.');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
 
